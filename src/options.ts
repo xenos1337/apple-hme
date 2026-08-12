@@ -1,5 +1,4 @@
 export type Autofill = {
-  button: boolean;
   contextMenu: boolean;
 };
 
@@ -9,7 +8,6 @@ export type Options = {
 
 export const DEFAULT_OPTIONS: Options = {
   autofill: {
-    button: true,
     contextMenu: true,
   },
 };

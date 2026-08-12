@@ -18,7 +18,7 @@ export const Spinner = () => {
       <FontAwesomeIcon
         icon={faSpinner}
         spin={true}
-        className="text-3xl text-primary-light dark:text-primary-dark"
+        className="text-3xl text-primary-light dark:text-muted-dark"
       />
     </div>
   );
@@ -32,15 +32,17 @@ export const LoadingButton = (
     HTMLButtonElement
   >
 ) => {
-  const { loading, disabled, ...btnHtmlAttrs } = props;
+  const { loading, disabled, className, ...btnHtmlAttrs } = props;
 
   const defaultClassName =
-    'w-full justify-center text-white bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-primary-dark/30 font-medium rounded-lg px-5 py-2.5 text-center mr-2 inline-flex items-center';
+    'w-full min-h-[42px] justify-center text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]';
 
   const disabledClassName =
-    'w-full justify-center text-white bg-gray-400 font-medium rounded-lg px-5 py-2.5 text-center mr-2 inline-flex items-center';
+    'w-full min-h-[42px] justify-center text-zinc-500 dark:text-zinc-600 bg-zinc-200 dark:bg-zinc-900 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center';
 
-  const btnClassName = disabled ? disabledClassName : defaultClassName;
+  const btnClassName = `${disabled ? disabledClassName : defaultClassName} ${
+    className || ''
+  }`;
 
   return (
     <button
@@ -60,7 +62,7 @@ export const LoadingButton = (
 export const ErrorMessage = (props: { children?: React.ReactNode }) => {
   return (
     <div
-      className="p-2 text-sm text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-lg"
+      className="p-3 text-sm text-red-300 bg-[#181112] border border-[#4A2025] rounded-lg"
       role="alert"
     >
       {props.children}
@@ -77,18 +79,20 @@ export const TitledComponent = (props: {
     props.children instanceof Array ? props.children : [props.children];
 
   return (
-    <div className="text-base space-y-3">
+    <div className="text-base space-y-4">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-text-light dark:text-text-dark">
+        <h1 className="text-3xl font-bold tracking-tight text-balance text-text-light dark:text-text-dark">
           {props.title}
         </h1>
-        <h2 className="font-medium text-gray-400">{props.subtitle}</h2>
+        <h2 className="mt-1 font-medium text-sm text-muted-light dark:text-muted-dark text-balance">
+          {props.subtitle}
+        </h2>
       </div>
       {children?.map((child, key) => {
         return (
           child && (
             <React.Fragment key={key}>
-              <hr className="border-gray-200 dark:border-gray-700" />
+              <hr className="border-line-light dark:border-line-dark" />
               {child}
             </React.Fragment>
           )
@@ -109,7 +113,7 @@ export const Link = (
   const { className, children, ...restProps } = props;
   return (
     <a
-      className={`text-primary-light dark:text-primary-dark hover:opacity-80 ${className}`}
+      className={`text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white underline-offset-4 hover:underline ${className}`}
       target="_blank"
       rel="noreferrer"
       {...restProps}
@@ -176,7 +180,7 @@ export const ThemeSwitch = () => {
   return (
     <button
       onClick={() => setTheme(nextTheme[theme])}
-      className="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-surface-light dark:hover:bg-surface-dark"
+      className="min-w-[40px] min-h-[40px] p-2 rounded-lg text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
       title={themeLabels[theme]}
       aria-label={themeLabels[theme]}
     >

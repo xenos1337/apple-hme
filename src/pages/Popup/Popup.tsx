@@ -48,7 +48,6 @@ import './Popup.css';
 
 import Fuse from 'fuse.js';
 import isEqual from 'lodash.isequal';
-import startCase from 'lodash.startcase';
 import browser from 'webextension-polyfill';
 import { isFirefox } from '../../browserUtils';
 import { useBrowserStorageState } from '../../hooks';
@@ -56,22 +55,7 @@ import {
   CONTEXT_MENU_ITEM_ID,
   SIGNED_OUT_CTA_COPY,
 } from '../Background/constants';
-import {
-  AuthenticatedAction,
-  AuthenticatedAndManagingAction,
-  PopupAction,
-  PopupState,
-  SignedOutAction,
-  STATE_MACHINE_TRANSITIONS,
-} from './stateMachine';
-
-type StateTransitions = {
-  [PopupState.SignedOut]: SignedOutAction;
-  [PopupState.Authenticated]: AuthenticatedAction;
-  [PopupState.AuthenticatedAndManaging]: AuthenticatedAndManagingAction;
-};
-
-type TransitionCallback<T extends PopupAction> = (action: T) => void;
+import { PopupState, STATE_MACHINE_TRANSITIONS } from './stateMachine';
 
 const SignInInstructions = () => {
   const userguideUrl = browser.runtime.getURL('userguide.html');
@@ -84,7 +68,7 @@ const SignInInstructions = () => {
             To use this extension, sign in to your iCloud account on{' '}
             <Link
               href="https://icloud.com"
-              className="font-semibold text-primary-light dark:text-primary-dark"
+              className="font-semibold text-primary-light dark:text-muted-dark"
               aria-label="Go to iCloud.com"
             >
               icloud.com
@@ -98,7 +82,7 @@ const SignInInstructions = () => {
           </p>
         </div>
         <div
-          className="flex p-3 text-sm border rounded-lg bg-surface-light dark:bg-surface-dark"
+          className="flex p-3 text-sm border border-line-light dark:border-line-dark rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none"
           role="alert"
         >
           <FontAwesomeIcon icon={faInfoCircle} className="mr-2 mt-1" />
@@ -110,7 +94,7 @@ const SignInInstructions = () => {
         </div>
         {isFirefox && (
           <div
-            className="flex p-3 text-sm border rounded-lg bg-surface-light dark:bg-surface-dark"
+            className="flex p-3 text-sm border border-line-light dark:border-line-dark rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm dark:shadow-none"
             role="alert"
           >
             <FontAwesomeIcon icon={faFirefoxBrowser} className="mr-2 mt-1" />
@@ -119,7 +103,7 @@ const SignInInstructions = () => {
               If using{' '}
               <Link
                 href="https://support.mozilla.org/en-US/kb/containers"
-                className="font-semibold text-primary-light dark:text-primary-dark"
+                className="font-semibold text-primary-light dark:text-muted-dark"
                 aria-label="Firefox Multi-Account Containers docs"
               >
                 Firefox Containers
@@ -133,7 +117,7 @@ const SignInInstructions = () => {
             href={userguideUrl}
             target="_blank"
             rel="noreferrer"
-            className="w-full justify-center text-white bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-primary-dark/30 font-medium rounded-lg px-5 py-2.5 text-center mr-2 inline-flex items-center"
+            className="w-full min-h-[42px] justify-center text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
             aria-label="Help"
           >
             <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
@@ -143,7 +127,7 @@ const SignInInstructions = () => {
             href="https://icloud.com"
             target="_blank"
             rel="noreferrer"
-            className="w-full justify-center text-white bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-primary-dark/30 font-medium rounded-lg px-5 py-2.5 text-center mr-2 inline-flex items-center"
+            className="w-full min-h-[42px] justify-center text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
             aria-label="Go to iCloud.com"
           >
             <FontAwesomeIcon icon={faExternalLink} className="mr-1" /> Go to
@@ -168,11 +152,11 @@ const ReservationResult = (props: { hme: HmeEmail }) => {
   };
 
   const btnClassName =
-    'focus:outline-none text-white bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-4 focus:ring-primary-light/30 dark:focus:ring-primary-dark/30 font-medium rounded-lg text-sm px-5 py-2.5 block w-full';
+    'min-h-[42px] focus:outline-none text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg text-sm px-5 py-2.5 block w-full shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]';
 
   return (
     <div
-      className="space-y-2 p-2 text-sm text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 rounded-lg"
+      className="space-y-2 p-3 text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/70 rounded-xl"
       role="alert"
     >
       <p>
@@ -208,7 +192,7 @@ const FooterButton = (
 ) => {
   return (
     <button
-      className="text-primary-light dark:text-primary-dark hover:opacity-80 focus:outline-primary-light dark:focus:outline-primary-dark"
+      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
       {...props}
     >
       <FontAwesomeIcon icon={props.icon} className="mr-1" />
@@ -232,7 +216,7 @@ const SignOutButton = (props: {
 }) => {
   return (
     <FooterButton
-      className="text-primary-light dark:text-primary-dark hover:opacity-80 focus:outline-primary-light dark:focus:outline-primary-dark"
+      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
       onClick={async () => {
         await props.client.signOut();
         setBrowserStorageValue('clientState', undefined);
@@ -353,7 +337,7 @@ const HmeGenerator = (props: {
     isEmailRefreshSubmitting || hmeEmail == reservedHme?.hme;
 
   const reservationFormInputClassName =
-    'appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-text-light dark:text-text-dark bg-white dark:bg-gray-800 focus:outline-none focus:border-primary-light dark:focus:border-primary-dark focus:z-10 sm:text-sm';
+    'appearance-none rounded-lg relative block w-full min-h-[42px] px-3 py-2 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:z-10 sm:text-sm';
 
   return (
     <TitledComponent
@@ -362,10 +346,14 @@ const HmeGenerator = (props: {
     >
       <div className="text-center space-y-1">
         <div>
-          <span className="text-2xl">
-            <button className="mr-2" onClick={onEmailRefreshClick}>
+          <span className="text-2xl font-semibold tracking-tight tabular-nums">
+            <button
+              className="mr-2 min-w-[40px] min-h-[40px] rounded-lg text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
+              onClick={onEmailRefreshClick}
+              aria-label="Generate another address"
+            >
               <FontAwesomeIcon
-                className="text-sky-400 hover:text-sky-500 align-text-bottom"
+                className="align-text-bottom"
                 icon={faRefresh}
                 spin={isEmailRefreshSubmitting}
               />
@@ -373,7 +361,9 @@ const HmeGenerator = (props: {
             {hmeEmail}
           </span>
           {fwdToEmail !== undefined && (
-            <p className="text-gray-400">Forward to: {fwdToEmail}</p>
+            <p className="mt-1 text-sm text-muted-light dark:text-muted-dark">
+              Forward to: {fwdToEmail}
+            </p>
           )}
         </div>
         {hmeError && <ErrorMessage>{hmeError}</ErrorMessage>}
@@ -435,7 +425,7 @@ const HmeGenerator = (props: {
           href={browser.runtime.getURL('userguide.html')}
           target="_blank"
           rel="noreferrer"
-          className="text-primary-light dark:text-primary-dark hover:opacity-80 focus:outline-primary-light dark:focus:outline-primary-dark inline-flex items-center"
+          className="min-h-[40px] px-2 text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md inline-flex items-center"
         >
           <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
           Help
@@ -507,9 +497,10 @@ const HmeDetails = (props: {
   };
 
   const btnClassName =
-    'w-full justify-center text-white focus:ring-4 focus:outline-none font-medium rounded-lg px-2 py-3 text-center inline-flex items-center';
+    'w-full min-h-[42px] justify-center text-white dark:text-text-dark focus:ring-2 focus:outline-none font-semibold rounded-lg px-2 py-3 text-center inline-flex items-center';
   const labelClassName = 'font-bold text-text-light dark:text-text-dark';
-  const valueClassName = 'text-gray-500 dark:text-gray-400 truncate';
+  const valueClassName =
+    'text-muted-light dark:text-muted-dark truncate tabular-nums';
 
   return (
     <div className="space-y-2">
@@ -556,14 +547,14 @@ const HmeDetails = (props: {
       <div className="grid grid-cols-3 gap-2">
         <button
           title="Copy"
-          className={`${btnClassName} bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-primary-light/30 dark:focus:ring-primary-dark/30`}
+          className={`${btnClassName} bg-action-light hover:bg-actionHover-light dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-primary-light/30 dark:focus:ring-white/20 shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]`}
           onClick={onCopyClick}
         >
           <FontAwesomeIcon icon={faClipboard} />
         </button>
         <button
           title="Autofill"
-          className={`${btnClassName} bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-primary-light/30 dark:focus:ring-primary-dark/30`}
+          className={`${btnClassName} bg-action-light hover:bg-actionHover-light dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-primary-light/30 dark:focus:ring-white/20 shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]`}
           onClick={onAutofillClick}
         >
           <FontAwesomeIcon icon={faCheck} />
@@ -572,8 +563,8 @@ const HmeDetails = (props: {
           title={props.hme.isActive ? 'Deactivate' : 'Reactivate'}
           className={`${btnClassName} ${
             props.hme.isActive
-              ? 'bg-red-500 hover:opacity-90 dark:bg-red-600 focus:ring-red-500/30 dark:focus:ring-red-600/30'
-              : 'bg-primary-light hover:opacity-90 dark:bg-primary-dark focus:ring-primary-light/30 dark:focus:ring-primary-dark/30'
+              ? 'bg-red-600 hover:bg-red-700 dark:bg-red-950 dark:hover:bg-red-900 focus:ring-red-500/30 dark:focus:ring-red-500/20'
+              : 'bg-action-light hover:bg-actionHover-light dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-primary-light/30 dark:focus:ring-white/20'
           }`}
           onClick={onActivationClick}
           loading={isActivateSubmitting}
@@ -583,7 +574,7 @@ const HmeDetails = (props: {
         {!props.hme.isActive && (
           <LoadingButton
             title="Delete"
-            className={`${btnClassName} bg-red-500 hover:opacity-90 dark:bg-red-600 focus:ring-red-500/30 dark:focus:ring-red-600/30 col-span-3`}
+            className={`${btnClassName} bg-red-600 hover:bg-red-700 dark:bg-red-950 dark:hover:bg-red-900 focus:ring-red-500/30 dark:focus:ring-red-500/20 col-span-3`}
             onClick={onDeletionClick}
             loading={isDeleteSubmitting}
           >
@@ -668,16 +659,16 @@ const HmeManager = (props: {
     const selectedHmeEmail = hmeEmails[selectedHmeIdx];
 
     const searchBox = (
-      <div className="relative p-2 rounded-tl-md bg-gray-100 dark:bg-gray-700">
+      <div className="relative p-2 rounded-tl-xl bg-elevated-light dark:bg-elevated-dark">
         <div className="absolute inset-y-0 flex items-center pl-3 pointer-events-none">
           <FontAwesomeIcon
-            className="text-gray-400 dark:text-gray-500"
+            className="text-muted-light dark:text-zinc-600"
             icon={faSearch}
           />
         </div>
         <input
           type="search"
-          className="pl-9 p-2 w-full rounded placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-text-light dark:text-text-dark border border-gray-200 dark:border-gray-600 focus:outline-none focus:border-sky-400 dark:focus:border-sky-500"
+          className="pl-9 p-2 min-h-[42px] w-full rounded-lg placeholder-muted-light dark:placeholder-zinc-600 bg-control-light dark:bg-control-dark text-text-light dark:text-text-dark border border-line-light dark:border-line-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10"
           placeholder="Search"
           aria-label="Search through your HideMyEmail addresses"
           onChange={(e) => {
@@ -689,9 +680,9 @@ const HmeManager = (props: {
     );
 
     const btnBaseClassName =
-      'p-2 w-full text-left border-b dark:border-gray-600 last:border-b-0 cursor-pointer truncate focus:outline-primary-light dark:focus:outline-primary-dark';
-    const btnClassName = `${btnBaseClassName} hover:bg-gray-100 dark:hover:bg-gray-700`;
-    const selectedBtnClassName = `${btnBaseClassName} text-white bg-primary-light dark:bg-primary-dark font-medium`;
+      'p-2.5 min-h-[42px] w-full text-left border-b border-line-light dark:border-line-dark last:border-b-0 cursor-pointer truncate focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-light/30 dark:focus:ring-white/20';
+    const btnClassName = `${btnBaseClassName} hover:bg-elevated-light dark:hover:bg-elevated-dark`;
+    const selectedBtnClassName = `${btnBaseClassName} text-white dark:text-text-dark bg-action-light dark:bg-action-dark font-semibold`;
 
     const labelList = hmeEmails.map((hme, idx) => (
       <button
@@ -716,18 +707,20 @@ const HmeManager = (props: {
     ));
 
     const noSearchResult = (
-      <div className="p-3 break-words text-center text-gray-400 dark:text-gray-500">
+      <div className="p-3 break-words text-center text-muted-light dark:text-muted-dark">
         No results for &quot;{searchPrompt}&quot;
       </div>
     );
 
     return (
       <div className="grid grid-cols-2" style={{ height: 359 }}>
-        <div className="overflow-y-auto text-sm rounded-l-md border border-gray-200">
-          <div className="sticky top-0 border-b">{searchBox}</div>
+        <div className="overflow-y-auto text-sm rounded-l-xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark">
+          <div className="sticky top-0 border-b border-line-light dark:border-line-dark">
+            {searchBox}
+          </div>
           {hmeEmails.length === 0 && searchPrompt ? noSearchResult : labelList}
         </div>
-        <div className="overflow-y-auto p-2 rounded-r-md border border-l-0 border-gray-200">
+        <div className="overflow-y-auto p-3 rounded-r-xl border border-l-0 border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark">
           {selectedHmeEmail && (
             <HmeDetails
               client={props.client}
@@ -742,7 +735,7 @@ const HmeManager = (props: {
   };
 
   const emptyState = (
-    <div className="text-center text-lg text-gray-400">
+    <div className="p-6 text-center text-lg text-muted-light dark:text-muted-dark rounded-xl bg-surface-light dark:bg-surface-dark border border-line-light dark:border-line-dark">
       There are no emails to list
     </div>
   );
@@ -779,7 +772,7 @@ const HmeManager = (props: {
           href={browser.runtime.getURL('userguide.html')}
           target="_blank"
           rel="noreferrer"
-          className="text-primary-light dark:text-primary-dark hover:opacity-80 focus:outline-primary-light dark:focus:outline-primary-dark inline-flex items-center"
+          className="min-h-[40px] px-2 text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md inline-flex items-center"
         >
           <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
           Help
@@ -795,7 +788,11 @@ const constructClient = (clientState: Store['clientState']): ICloudClient => {
     throw new Error('Cannot construct client when client state is undefined');
   }
 
-  return new ICloudClient(clientState.setupUrl, clientState.webservices);
+  return new ICloudClient(
+    clientState.setupUrl,
+    clientState.webservices,
+    clientState
+  );
 };
 
 const transitionToNextStateElement = (
@@ -890,12 +887,25 @@ const SelectFwdToForm = () => {
         return;
       }
 
-      const client = new ICloudClient(clientState.setupUrl);
+      const client = new ICloudClient(
+        clientState.setupUrl,
+        clientState.webservices,
+        clientState
+      );
       const isClientAuthenticated = await client.isAuthenticated();
       if (!isClientAuthenticated) {
         setListHmeError(SELECT_FWD_TO_SIGNED_OUT_CTA_COPY);
         setIsFetching(false);
         return;
+      }
+
+      const nextClientState = {
+        ...clientState,
+        webservices: client.webservices,
+        ...client.context(),
+      };
+      if (!isEqual(clientState, nextClientState)) {
+        setClientState(nextClientState);
       }
 
       try {
@@ -915,7 +925,7 @@ const SelectFwdToForm = () => {
     };
 
     !isClientStateLoading && fetchHmeList();
-  }, [setClientState, clientState?.setupUrl, isClientStateLoading]);
+  }, [clientState, isClientStateLoading, setClientState]);
 
   const onSelectedFwdToSubmit = async (
     event: React.FormEvent<HTMLFormElement>
@@ -929,7 +939,8 @@ const SelectFwdToForm = () => {
       try {
         const client = new ICloudClient(
           clientState.setupUrl,
-          clientState.webservices
+          clientState.webservices,
+          clientState
         );
         const pms = new PremiumMailSettings(client);
         await pms.updateForwardToHme(selectedFwdToEmail);
@@ -961,7 +972,7 @@ const SelectFwdToForm = () => {
             type="radio"
             disabled={isSubmitting}
             name={`fwdto-radio-${key}`}
-            className="cursor-pointer w-4 h-4 accent-gray-900 hover:accent-gray-500"
+            className="cursor-pointer w-4 h-4 accent-action-light dark:accent-zinc-300 focus:ring-primary-light/30 dark:focus:ring-white/20"
           />
           <label
             htmlFor={`radio-${key}`}
@@ -985,29 +996,29 @@ const AutofillForm = () => {
 
   return (
     <form className="space-y-3">
-      {Object.entries(options.autofill).map(([key, value]) => (
-        <div className="flex items-center mb-3" key={key}>
-          <input
-            onChange={() =>
-              setOptions({
-                ...options,
-                autofill: { ...options.autofill, [key]: !value },
-              })
-            }
-            checked={value}
-            id={`checkbox-${key}`}
-            type="checkbox"
-            name={`checkbox-${key}`}
-            className="cursor-pointer w-4 h-4 accent-gray-900 hover:accent-gray-500"
-          />
-          <label
-            htmlFor={`checkbox-${key}`}
-            className="cursor-pointer ml-2 text-text-light dark:text-text-dark"
-          >
-            {startCase(key)}
-          </label>
-        </div>
-      ))}
+      <div className="flex items-center mb-3">
+        <input
+          onChange={() =>
+            setOptions({
+              ...options,
+              autofill: {
+                contextMenu: !options.autofill.contextMenu,
+              },
+            })
+          }
+          checked={options.autofill.contextMenu}
+          id="checkbox-contextMenu"
+          type="checkbox"
+          name="checkbox-contextMenu"
+          className="cursor-pointer w-4 h-4 accent-action-light dark:accent-zinc-300 focus:ring-primary-light/30 dark:focus:ring-white/20"
+        />
+        <label
+          htmlFor="checkbox-contextMenu"
+          className="cursor-pointer ml-2 text-text-light dark:text-text-dark"
+        >
+          Context menu
+        </label>
+      </div>
     </form>
   );
 };
@@ -1044,11 +1055,24 @@ const Popup = () => {
 
   useEffect(() => {
     const syncClientAuthState = async () => {
+      const client =
+        clientState?.setupUrl !== undefined
+          ? constructClient(clientState)
+          : undefined;
       const isAuthenticated =
-        clientState?.setupUrl !== undefined &&
-        (await new ICloudClient(clientState.setupUrl).isAuthenticated());
+        client !== undefined && (await client.isAuthenticated());
 
       if (isAuthenticated) {
+        if (client !== undefined && clientState !== undefined) {
+          const nextClientState = {
+            ...clientState,
+            webservices: client.webservices,
+            ...client.context(),
+          };
+          if (!isEqual(clientState, nextClientState)) {
+            setClientState(nextClientState);
+          }
+        }
         setState((prevState: PopupState) =>
           prevState === PopupState.SignedOut
             ? PopupState.Authenticated
@@ -1068,34 +1092,25 @@ const Popup = () => {
     setState,
     setClientState,
     clientAuthStateSynced,
-    clientState?.setupUrl,
+    clientState,
     isClientStateLoading,
   ]);
 
   if (!clientAuthStateSynced || isStateLoading || isClientStateLoading) {
     return (
-      <div className="w-full p-4 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+      <div className="w-full min-h-[180px] flex items-center justify-center p-4 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
         <Spinner />
       </div>
     );
   }
 
   const currentState = state as PopupState;
-  const handleSignOut = async () => {
-    if (clientState?.setupUrl) {
-      await new ICloudClient(clientState.setupUrl).signOut();
-      setClientState(undefined);
-      performDeauthSideEffects();
-    }
-    setState(PopupState.SignedOut);
-  };
-
   return (
     <div className="min-h-full bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-      <div className="flex justify-between p-2">
+      <div className="flex justify-between p-2 border-b border-line-light dark:border-line-dark bg-surface-light/80 dark:bg-surface-dark/80">
         <button
           onClick={() => setShowOptions(!showOptions)}
-          className="p-2 rounded-lg text-text-light dark:text-text-dark hover:bg-surface-light dark:hover:bg-surface-dark"
+          className="min-w-[40px] min-h-[40px] p-2 rounded-lg text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
           title={showOptions ? 'Back' : 'Settings'}
           aria-label={showOptions ? 'Back' : 'Settings'}
         >
@@ -1106,7 +1121,7 @@ const Popup = () => {
         </button>
         <ThemeSwitch />
       </div>
-      <div className="p-4">
+      <div className="p-5">
         {showOptions ? (
           <Options />
         ) : (

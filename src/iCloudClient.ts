@@ -1,15 +1,67 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export class UnsuccessfulRequestError extends Error {}
 
 type ServiceName = 'premiummailsettings';
 
+export type Webservice = {
+  url: string;
+  status: string;
+};
+
+export type Webservices = Record<ServiceName, Webservice>;
+
+export type ICloudClientContext = {
+  clientId?: string;
+  dsid?: string;
+};
+
 export const DEFAULT_SETUP_URL = 'https://setup.icloud.com/setup/ws/1';
 export const CN_SETUP_URL = 'https://setup.icloud.com.cn/setup/ws/1';
 
+// These values are part of the current Hide My Email web-client contract.
+// Keep them in one place so an iCloud web-client update only requires a
+// single change.
+export const CLIENT_BUILD_NUMBER = '2628Build19';
+export const CLIENT_MASTERING_NUMBER = '2628Build19';
+
+type SetupValidationResponse = {
+  webservices?: Webservices;
+  dsInfo?: {
+    dsid?: string | number;
+  };
+  dsid?: string | number;
+  success?: boolean;
+  error?: {
+    errorMessage?: string;
+  };
+};
+
 class ICloudClient {
+  public readonly clientId: string;
+  public dsid?: string;
+
   constructor(
     readonly setupUrl: typeof DEFAULT_SETUP_URL | typeof CN_SETUP_URL,
-    public webservices?: Record<ServiceName, { url: string; status: string }>
-  ) {}
+    public webservices?: Webservices,
+    clientIdOrContext: string | ICloudClientContext = uuidv4(),
+    dsid?: string
+  ) {
+    if (typeof clientIdOrContext === 'string') {
+      this.clientId = clientIdOrContext;
+      this.dsid = dsid;
+    } else {
+      this.clientId = clientIdOrContext.clientId || uuidv4();
+      this.dsid = clientIdOrContext.dsid;
+    }
+  }
+
+  public context(): ICloudClientContext & { clientId: string } {
+    return {
+      clientId: this.clientId,
+      ...(this.dsid === undefined ? {} : { dsid: this.dsid }),
+    };
+  }
 
   public async request(
     method: 'GET' | 'POST',
@@ -20,11 +72,16 @@ class ICloudClient {
     } = {}
   ): Promise<unknown> {
     const { headers = {}, data = undefined } = options;
+    const requestHeaders = {
+      ...(data === undefined ? {} : { 'Content-Type': 'application/json' }),
+      ...headers,
+    };
 
     const response = await fetch(url, {
       method,
-      headers,
+      headers: requestHeaders,
       body: data !== undefined ? JSON.stringify(data) : undefined,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -37,10 +94,11 @@ class ICloudClient {
   }
 
   public webserviceUrl(serviceName: ServiceName): string {
-    if (this.webservices === undefined) {
+    const webservice = this.webservices?.[serviceName];
+    if (webservice === undefined) {
       throw new Error('webservices have not been initialised');
     }
-    return this.webservices[serviceName].url;
+    return webservice.url;
   }
 
   public async isAuthenticated(): Promise<boolean> {
@@ -53,16 +111,65 @@ class ICloudClient {
   }
 
   public async validateToken(): Promise<void> {
-    const { webservices } = (await this.request(
+    const response = (await this.request(
       'POST',
       `${this.setupUrl}/validate`
-    )) as {
-      webservices: ICloudClient['webservices'];
-    };
+    )) as SetupValidationResponse;
 
-    if (webservices) {
-      this.webservices = webservices;
+    if (response.success === false) {
+      throw new UnsuccessfulRequestError(
+        response.error?.errorMessage || 'iCloud authentication failed'
+      );
     }
+
+    if (response.webservices) {
+      this.webservices = response.webservices;
+    }
+
+    const discoveredDsid = response.dsInfo?.dsid ?? response.dsid;
+    if (discoveredDsid !== undefined && discoveredDsid !== null) {
+      this.dsid = String(discoveredDsid);
+    }
+  }
+
+  /**
+   * Refreshes the setup session when a client was restored from older
+   * extension storage and is missing the account context required by HME.
+   */
+  public async ensureHmeContext(): Promise<void> {
+    if (this.webservices === undefined || this.dsid === undefined) {
+      await this.validateToken();
+    }
+
+    if (this.webservices === undefined) {
+      throw new Error('webservices have not been initialised');
+    }
+
+    if (this.dsid === undefined) {
+      throw new Error('iCloud DSID has not been initialised');
+    }
+  }
+
+  public async hmeUrl(version: 'v1' | 'v2', path: string): Promise<string> {
+    await this.ensureHmeContext();
+
+    const serviceUrl = this.webserviceUrl('premiummailsettings').replace(
+      /\/+$/,
+      ''
+    );
+    const { dsid } = this;
+    if (dsid === undefined) {
+      throw new Error('iCloud DSID has not been initialised');
+    }
+    const endpoint = path.replace(/^\/+/, '');
+    const url = new URL(`${serviceUrl}/${version}/${endpoint}`);
+
+    url.searchParams.set('clientBuildNumber', CLIENT_BUILD_NUMBER);
+    url.searchParams.set('clientMasteringNumber', CLIENT_MASTERING_NUMBER);
+    url.searchParams.set('clientId', this.clientId);
+    url.searchParams.set('dsid', dsid);
+
+    return url.toString();
   }
 
   public async signOut(
@@ -92,20 +199,43 @@ export type HmeEmail = {
   inputElementXPath?: string;
 };
 
+type RawHmeEmail = Omit<HmeEmail, 'forwardToEmail'> & {
+  forwardToEmail?: string;
+};
+
 export type ListHmeResult = {
   hmeEmails: HmeEmail[];
   selectedForwardTo: string;
   forwardToEmails: string[];
 };
 
+type RawListHmeResult = Omit<ListHmeResult, 'hmeEmails'> & {
+  hmeEmails: RawHmeEmail[];
+};
+
 type PremiumMailSettingsResponse<T = unknown> = {
   success: boolean;
   result: T;
   error?: {
-    errorMessage: string;
+    errorMessage?: string;
   };
 };
 
+const responseError = (
+  response: PremiumMailSettingsResponse,
+  fallback: string
+): string => response.error?.errorMessage || fallback;
+
+const normaliseHmeEmail = (
+  hmeEmail: RawHmeEmail,
+  selectedForwardTo?: string
+): HmeEmail => ({
+  ...hmeEmail,
+  forwardToEmail: hmeEmail.forwardToEmail ?? selectedForwardTo ?? '',
+});
+
+export class ListHmeException extends Error {}
+export class GetHmeException extends Error {}
 export class GenerateHmeException extends Error {}
 export class ReserveHmeException extends Error {}
 export class UpdateHmeMetadataException extends Error {}
@@ -115,29 +245,39 @@ export class DeleteHmeException extends Error {}
 export class UpdateFwdToHmeException extends Error {}
 
 export class PremiumMailSettings {
-  private readonly baseUrl: string;
-  private readonly v2BaseUrl: string;
-  constructor(readonly client: ICloudClient) {
-    this.baseUrl = `${client.webserviceUrl('premiummailsettings')}/v1`;
-    this.v2BaseUrl = `${client.webserviceUrl('premiummailsettings')}/v2`;
-  }
+  constructor(readonly client: ICloudClient) {}
 
   async listHme(): Promise<ListHmeResult> {
-    const { result } = (await this.client.request(
+    const response = (await this.client.request(
       'GET',
-      `${this.v2BaseUrl}/hme/list`
-    )) as PremiumMailSettingsResponse<ListHmeResult>;
-    return result;
+      await this.client.hmeUrl('v2', 'hme/list')
+    )) as PremiumMailSettingsResponse<RawListHmeResult>;
+
+    if (!response.success) {
+      throw new ListHmeException(
+        responseError(response, 'Failed to list HME addresses')
+      );
+    }
+
+    return {
+      ...response.result,
+      hmeEmails: response.result.hmeEmails.map((hmeEmail) =>
+        normaliseHmeEmail(hmeEmail, response.result.selectedForwardTo)
+      ),
+    };
   }
 
   async generateHme(): Promise<string> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/generate`
+      await this.client.hmeUrl('v1', 'hme/generate'),
+      { data: { langCode: 'en-us' } }
     )) as PremiumMailSettingsResponse<{ hme: string }>;
 
     if (!response.success) {
-      throw new GenerateHmeException(response.error?.errorMessage);
+      throw new GenerateHmeException(
+        responseError(response, 'Failed to generate HME')
+      );
     }
 
     return response.result.hme;
@@ -152,15 +292,33 @@ export class PremiumMailSettings {
   ): Promise<HmeEmail> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/reserve`,
+      await this.client.hmeUrl('v1', 'hme/reserve'),
       { data: { hme, label, note } }
-    )) as PremiumMailSettingsResponse<{ hme: HmeEmail }>;
+    )) as PremiumMailSettingsResponse<{ hme: RawHmeEmail }>;
 
     if (!response.success) {
-      throw new ReserveHmeException(response.error?.errorMessage);
+      throw new ReserveHmeException(
+        responseError(response, 'Failed to reserve HME')
+      );
     }
 
-    return response.result.hme;
+    return normaliseHmeEmail(response.result.hme);
+  }
+
+  async getHme(anonymousId: string): Promise<HmeEmail> {
+    const response = (await this.client.request(
+      'POST',
+      await this.client.hmeUrl('v2', 'hme/get'),
+      { data: { anonymousId } }
+    )) as PremiumMailSettingsResponse<{ hme: RawHmeEmail }>;
+
+    if (!response.success) {
+      throw new GetHmeException(
+        responseError(response, 'Failed to get HME address')
+      );
+    }
+
+    return normaliseHmeEmail(response.result.hme);
   }
 
   async updateHmeMetadata(
@@ -170,7 +328,7 @@ export class PremiumMailSettings {
   ): Promise<void> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/updateMetaData`,
+      await this.client.hmeUrl('v1', 'hme/updateMetaData'),
       { data: { anonymousId, label, note } }
     )) as PremiumMailSettingsResponse;
 
@@ -182,7 +340,7 @@ export class PremiumMailSettings {
   async deactivateHme(anonymousId: string): Promise<void> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/deactivate`,
+      await this.client.hmeUrl('v1', 'hme/deactivate'),
       { data: { anonymousId } }
     )) as PremiumMailSettingsResponse;
 
@@ -194,7 +352,7 @@ export class PremiumMailSettings {
   async reactivateHme(anonymousId: string): Promise<void> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/reactivate`,
+      await this.client.hmeUrl('v1', 'hme/reactivate'),
       { data: { anonymousId } }
     )) as PremiumMailSettingsResponse;
 
@@ -206,7 +364,7 @@ export class PremiumMailSettings {
   async deleteHme(anonymousId: string): Promise<void> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/delete`,
+      await this.client.hmeUrl('v1', 'hme/delete'),
       { data: { anonymousId } }
     )) as PremiumMailSettingsResponse;
 
@@ -218,7 +376,7 @@ export class PremiumMailSettings {
   async updateForwardToHme(forwardToEmail: string): Promise<void> {
     const response = (await this.client.request(
       'POST',
-      `${this.baseUrl}/hme/updateForwardTo`,
+      await this.client.hmeUrl('v1', 'hme/updateForwardTo'),
       { data: { forwardToEmail } }
     )) as PremiumMailSettingsResponse;
 

@@ -38,7 +38,27 @@ const constructClient = async (): Promise<ICloudClient> => {
     return new ICloudClient(DEFAULT_SETUP_URL);
   }
 
-  return new ICloudClient(clientState.setupUrl, clientState.webservices);
+  return new ICloudClient(
+    clientState.setupUrl,
+    clientState.webservices,
+    clientState
+  );
+};
+
+const persistClientState = (client: ICloudClient): void => {
+  setBrowserStorageValue('clientState', {
+    setupUrl: client.setupUrl,
+    webservices: client.webservices,
+    ...client.context(),
+  }).catch(console.debug);
+};
+
+const authenticateClient = async (client: ICloudClient): Promise<boolean> => {
+  const isAuthenticated = await client.isAuthenticated();
+  if (isAuthenticated) {
+    persistClientState(client);
+  }
+  return isAuthenticated;
 };
 
 const performDeauthSideEffects = () => {
@@ -59,10 +79,7 @@ const performAuthSideEffects = (
 ) => {
   const { notification = false } = options;
 
-  setBrowserStorageValue('clientState', {
-    setupUrl: client.setupUrl,
-    webservices: client.webservices,
-  });
+  persistClientState(client);
 
   browser.contextMenus
     .update(CONTEXT_MENU_ITEM_ID, {
@@ -108,9 +125,10 @@ browser.runtime.onMessage.addListener(async (uncastedMessage: unknown) => {
 
         const client = new ICloudClient(
           clientState.setupUrl,
-          clientState.webservices
+          clientState.webservices,
+          clientState
         );
-        const isClientAuthenticated = await client.isAuthenticated();
+        const isClientAuthenticated = await authenticateClient(client);
         if (!isClientAuthenticated) {
           await deauthCallback();
           break;
@@ -143,6 +161,7 @@ browser.runtime.onMessage.addListener(async (uncastedMessage: unknown) => {
         try {
           const pms = new PremiumMailSettings(client);
           const reservedHme = await pms.reserveHme(hme, label);
+          persistClientState(client);
           await sendMessageToTab(MessageType.ReservationResponse, {
             hme,
             elementId,
@@ -189,7 +208,7 @@ const setupContextMenu = async () => {
     },
     async () => {
       const client = await constructClient();
-      const isAuthenticated = await client.isAuthenticated();
+      const isAuthenticated = await authenticateClient(client);
       if (isAuthenticated) {
         performAuthSideEffects(client);
       } else {
@@ -259,7 +278,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   const hostname = serializedUrl ? new URL(serializedUrl).hostname : '';
 
   const client = await constructClient();
-  const isClientAuthenticated = await client.isAuthenticated();
+  const isClientAuthenticated = await authenticateClient(client);
 
   if (!isClientAuthenticated) {
     sendMessageToTab(
@@ -312,7 +331,7 @@ browser.webRequest.onResponseStarted.addListener(
 
     const setupUrl = url.split('/accountLogin')[0] as ICloudClient['setupUrl'];
     const client = new ICloudClient(setupUrl);
-    const isAuthenticated = await client.isAuthenticated();
+    const isAuthenticated = await authenticateClient(client);
     if (isAuthenticated) {
       performAuthSideEffects(client, { notification: true });
     }
@@ -353,7 +372,7 @@ browser.runtime.onInstalled.addListener(
   async (details: browser.Runtime.OnInstalledDetailsType) => {
     if (['install', 'update'].includes(details.reason)) {
       const client = await constructClient();
-      const isAuthenticated = await client.isAuthenticated();
+      const isAuthenticated = await authenticateClient(client);
       if (isAuthenticated) {
         performAuthSideEffects(client, { notification: true });
       } else {
