@@ -32,14 +32,8 @@ _Disclaimer: This extension is not endorsed by, directly affiliated with, mainta
 
 ### Address autofilling
 
-The extension can be configured to
-
-1. show an autofill button on input field focus
-2. show a context menu item when right-clicking on input fields
-
-<p align="center">
-<img src="./src/assets/img/readme-button-autofilling.png" alt="Autofilling button on input field focus" width="400" height="auto"/>
-</p>
+The extension can be configured to show a context menu item when right-clicking
+on input fields.
 
 <p align="center">
 <img src="./src/assets/img/readme-context-menu-autofilling.png" alt="Context menu item when right-clicking on input fields" width="400" height="auto"/>

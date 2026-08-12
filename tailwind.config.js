@@ -6,20 +6,44 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          light: '#3B82F6',
-          dark: '#60A5FA',
+          light: '#2563EB',
+          dark: '#E4E4E7',
         },
         background: {
-          light: '#FFFFFF',
-          dark: '#1F2937',
+          light: '#F4F4F5',
+          dark: '#09090B',
         },
         surface: {
-          light: '#F9FAFB',
-          dark: '#374151',
+          light: '#FFFFFF',
+          dark: '#111113',
+        },
+        elevated: {
+          light: '#FAFAFA',
+          dark: '#18181B',
+        },
+        control: {
+          light: '#FFFFFF',
+          dark: '#141416',
         },
         text: {
-          light: '#111827',
-          dark: '#F9FAFB',
+          light: '#18181B',
+          dark: '#F4F4F5',
+        },
+        muted: {
+          light: '#71717A',
+          dark: '#A1A1AA',
+        },
+        line: {
+          light: '#E4E4E7',
+          dark: '#2A2A2E',
+        },
+        action: {
+          light: '#2563EB',
+          dark: '#27272A',
+        },
+        actionHover: {
+          light: '#1D4ED8',
+          dark: '#3F3F46',
         },
       },
     },

@@ -1,9 +1,8 @@
 import browser from 'webextension-polyfill';
-import ICloudClient from './iCloudClient';
+import ICloudClient, { ICloudClientContext } from './iCloudClient';
 import { PopupState } from './pages/Popup/stateMachine';
 
 export type Autofill = {
-  button: boolean;
   contextMenu: boolean;
 };
 
@@ -17,7 +16,7 @@ export type Store = {
   clientState?: {
     setupUrl: ICloudClient['setupUrl'];
     webservices?: ICloudClient['webservices'];
-  };
+  } & ICloudClientContext;
   iCloudHmeOptions: Options;
   theme: 'light' | 'dark' | 'system';
 } & {
@@ -32,7 +31,6 @@ export const DEFAULT_STORE = {
   popupState: PopupState.SignedOut,
   iCloudHmeOptions: {
     autofill: {
-      button: true,
       contextMenu: true,
     },
   },

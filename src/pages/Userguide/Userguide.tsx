@@ -16,12 +16,12 @@ const Notice = (props: {
   const { title, children, isAlert = false } = props;
 
   const colourPalette = isAlert
-    ? 'bg-yellow-50 dark:bg-yellow-900/50 border-yellow-400 text-yellow-600 dark:text-yellow-200'
-    : 'text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border-gray-200 dark:border-gray-600';
+    ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-900/70 text-amber-700 dark:text-amber-200'
+    : 'text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border-line-light dark:border-line-dark';
 
   return (
     <div
-      className={`flex p-3 text-sm border rounded-lg ${colourPalette}`}
+      className={`flex p-4 text-sm border rounded-xl shadow-sm dark:shadow-none ${colourPalette}`}
       role={isAlert ? 'alert' : 'info'}
     >
       <FontAwesomeIcon
@@ -117,12 +117,12 @@ const AutofillableDemoInput = (props: {
         {autofillableInputValue?.endsWith('@icloud.com') && (
           <FontAwesomeIcon
             icon={faCheckCircle}
-            className="ml-1 mt-1 text-green-500"
+            className="ml-1 mt-1 text-emerald-600 dark:text-emerald-400"
           />
         )}
       </label>
       <input
-        className="block w-full rounded-md relative px-3 py-2 border border-gray-200 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark focus:outline-none focus:ring-sky-400 focus:border-sky-400 focus:z-10 sm:text-sm"
+        className="block w-full min-h-[42px] rounded-lg relative px-3 py-2 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:border-primary-light dark:focus:border-zinc-500 focus:z-10 sm:text-sm"
         defaultValue={autofillableInputValue}
         onInput={(e) =>
           setAutoFillableInputValue((e.target as HTMLInputElement).value)
@@ -147,25 +147,14 @@ const UsageInstructions = () => {
             In most cases though, you don&apos;t need to interact with the
             pop-up UI
           </span>
-          . The extension will automatically detect email input fields and
-          prompt you to autofill new addresses! Alternatively, you can
-          right-click on any text input field and select the menu item of the
-          extension.
+          . To autofill an address, right-click on an input field and select the
+          extension&apos;s context-menu item.
         </p>
       </div>
       <div className="space-y-2">
         <p>Try it yourself:</p>
-        <div className="w-full max-w-md p-3 border rounded-lg bg-surface-light dark:bg-surface-dark border-gray-200 dark:border-gray-600">
+        <div className="w-full max-w-md p-4 border rounded-xl bg-surface-light dark:bg-surface-dark border-line-light dark:border-line-dark shadow-sm dark:shadow-none">
           <form className="space-y-2">
-            <AutofillableDemoInput
-              label="Autofill via button"
-              inputAttributes={{
-                id: 'autofill-by-button',
-                name: 'email',
-                type: 'email',
-                placeholder: 'Click (focus) on this field',
-              }}
-            />
             <AutofillableDemoInput
               label="Autofill via right-click context menu"
               inputAttributes={{
@@ -179,8 +168,8 @@ const UsageInstructions = () => {
         </div>
       </div>
       <div>
-        If you find the autofill-via-button feature intrusive, you can disable
-        it in the <Link href="./options.html">extension Options</Link>.
+        You can enable or disable the context-menu autofill option in the
+        extension settings.
       </div>
       <div>
         Don&apos;t forget to delete the HideMyEmail addresses you created above
@@ -252,7 +241,7 @@ const TechnicalOverview = () => {
 
 const Userguide = () => {
   return (
-    <div className="w-9/12 m-auto mt-3 mb-24 text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark">
+    <main className="w-9/12 max-w-4xl m-auto pt-12 pb-24 px-4 text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark">
       <TitledComponent title="Hide My Email" subtitle="Quickstart guide">
         <div>
           <h3 className="font-bold text-lg mb-3">Sign-in to iCloud</h3>
@@ -267,7 +256,7 @@ const Userguide = () => {
           <TechnicalOverview />
         </div>
       </TitledComponent>
-    </div>
+    </main>
   );
 };
 
