@@ -162,6 +162,11 @@ const options = {
           force: true,
         },
         {
+          from: 'src/assets/img/logo.svg',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+        {
           from: 'src/assets/img/icloud-sign-in.webp',
           to: path.join(__dirname, 'build'),
           force: true,

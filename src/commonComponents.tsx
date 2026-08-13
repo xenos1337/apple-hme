@@ -15,10 +15,10 @@ import { useBrowserStorageState } from './hooks';
 export const Logo = () => {
   return (
     <img
-      src="icon-128.png"
+      src="logo.svg"
       alt=""
       aria-hidden="true"
-      className="mx-auto mb-3 h-12 w-12"
+      className="mx-auto mb-3 h-12 w-auto dark:invert"
     />
   );
 };
