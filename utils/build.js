@@ -3,6 +3,10 @@ process.env.NODE_ENV = 'production';
 process.env.ASSET_PATH = '/';
 process.env.MANIFEST_VERSION = process.env.MANIFEST_VERSION || '3';
 
+if (process.argv.includes('--firefox')) {
+  process.env.FIREFOX = 'true';
+}
+
 var webpack = require('webpack'),
   config = require('../webpack.config');
 

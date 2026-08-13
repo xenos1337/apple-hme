@@ -63,8 +63,8 @@ const SignInInstructions = () => {
         </div>
         <p>
           Once you&apos;re signed-in to your account you&apos;re set to go. Open
-          the extension pop-up (🍏 icon) to generate a new{' '}
-          <span className="font-semibold">HideMyEmail</span> address! ✨
+          the extension pop-up to generate a new{' '}
+          <span className="font-semibold">Hide My Email</span> address.
         </p>
       </div>
       {isFirefox && (
@@ -138,9 +138,9 @@ const UsageInstructions = () => {
     <div className="space-y-4">
       <div className="space-y-2">
         <p>
-          In the extension pop-up (🍏 icon) you can find a
-          MacOS-System-Settings-like UI that enables you to generate new
-          HideMyEmail addresses and manage existing ones.
+          In the extension pop-up you can find a MacOS-System-Settings-like UI
+          that enables you to generate new Hide My Email addresses and manage
+          existing ones.
         </p>
         <p>
           <span className="font-semibold">
@@ -172,10 +172,10 @@ const UsageInstructions = () => {
         extension settings.
       </div>
       <div>
-        Don&apos;t forget to delete the HideMyEmail addresses you created above
-        for the purposes of trying this out:
+        Don&apos;t forget to delete the Hide My Email addresses you created
+        above for the purposes of trying this out:
         <ol className="list-decimal list-inside">
-          <li>Open the extension pop-up (🍏 icon)</li>
+          <li>Open the extension pop-up</li>
           <li>Navigate to the &quot;Manage emails&quot; view</li>
           <li>Select, deactivate, and delete the relevant addresses</li>
         </ol>
@@ -222,16 +222,16 @@ const TechnicalOverview = () => {
         </span>
         . The source of the extension is{' '}
         <Link
-          href="https://github.com/dedoussis/icloud-hide-my-email-browser-extension"
+          href="https://github.com/xenos1337/apple-hme"
           aria-label="source code"
         >
-          publicly available in GitHub
+          publicly available on GitHub
         </Link>
         .
       </p>
       <p>
         If you&apos;re skeptical about using this extension, and looking for an
-        alternative way of interacting with the HideMyEmail service outside of
+        alternative way of interacting with the Hide My Email service outside of
         Safari, you can still use icloud.com on any browser. This extension only
         offers a more ergonomic browser experience compared to icloud.com.
       </p>
@@ -242,7 +242,7 @@ const TechnicalOverview = () => {
 const Userguide = () => {
   return (
     <main className="w-9/12 max-w-4xl m-auto pt-12 pb-24 px-4 text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark">
-      <TitledComponent title="Hide My Email" subtitle="Quickstart guide">
+      <TitledComponent title="Apple Hide My Email" subtitle="Quickstart guide">
         <div>
           <h3 className="font-bold text-lg mb-3">Sign-in to iCloud</h3>
           <SignInInstructions />
@@ -254,6 +254,18 @@ const Userguide = () => {
         <div>
           <h3 className="font-bold text-lg mb-3">Advanced</h3>
           <TechnicalOverview />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg mb-3">Legal</h3>
+          <p className="text-sm">
+            Independent open-source software by{' '}
+            <Link href="https://axvant.com/">
+              Axvant UG (haftungsbeschränkt)
+            </Link>
+            . Not affiliated with, endorsed by, or sponsored by Apple Inc.
+            Provided as-is, without warranty; use at your own risk.{' '}
+            <Link href="https://axvant.com/imprint">Imprint</Link>.
+          </p>
         </div>
       </TitledComponent>
     </main>
