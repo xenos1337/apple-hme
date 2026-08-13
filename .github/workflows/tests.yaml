@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - "*"
+      - '*'
     tags:
-      - "v*"
+      - 'v*'
   pull_request:
     branches:
       - main
@@ -37,6 +37,10 @@ jobs:
         run: npm run lint
       - name: Dependency review
         if: github.event_name == 'pull_request'
+        # Private repositories and repositories without Dependency Graph support
+        # return an error here. Keep the security report visible without blocking
+        # typechecked and linted builds when the GitHub feature is unavailable.
+        continue-on-error: true
         uses: actions/dependency-review-action@v4
 
   build:
@@ -48,6 +52,8 @@ jobs:
         browser: [chrome, firefox]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
