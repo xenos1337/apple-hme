@@ -1,4 +1,3 @@
-import 'regenerator-runtime/runtime.js';
 import browser from 'webextension-polyfill';
 import { isFirefox } from '../../browserUtils';
 import ICloudClient, {
