@@ -11,14 +11,14 @@ const configuredKeyPath = process.env.CHROME_EXTENSION_PRIVATE_KEY_PATH
   : null;
 const keyPath = configuredKeyPath && fs.existsSync(configuredKeyPath)
   ? configuredKeyPath
-  : path.join(os.tmpdir(), `icloud-hide-my-email-${process.pid}.pem`);
+  : path.join(os.tmpdir(), `apple-hide-my-email-${process.pid}.pem`);
 const crxPath = path.join(
   artifactsDir,
-  `icloud-hide-my-email-v${version}-chrome.crx`
+  `apple-hide-my-email-v${version}-chrome.crx`
 );
 const zipPath = path.join(
   artifactsDir,
-  `icloud-hide-my-email-v${version}-chrome.zip`
+  `apple-hide-my-email-v${version}-chrome.zip`
 );
 
 if (!fs.existsSync(path.join(buildDir, 'manifest.json'))) {

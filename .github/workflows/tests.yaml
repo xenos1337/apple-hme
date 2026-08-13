@@ -21,7 +21,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -45,7 +45,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
@@ -74,7 +74,7 @@ jobs:
       - name: Upload ${{ matrix.browser }} artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: icloud-hide-my-email-${{ matrix.browser }}-v${{ steps.version.outputs.version }}
+          name: apple-hide-my-email-${{ matrix.browser }}-v${{ steps.version.outputs.version }}
           path: artifacts/${{ matrix.browser }}/*
           if-no-files-found: error
           retention-days: 30
@@ -89,7 +89,7 @@ jobs:
       - name: Download browser artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: icloud-hide-my-email-*
+          pattern: apple-hide-my-email-*
           path: release
           merge-multiple: true
       - name: Publish GitHub release

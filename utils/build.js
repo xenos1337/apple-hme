@@ -4,6 +4,10 @@ process.env.ASSET_PATH = '/';
 process.env.MANIFEST_VERSION = process.env.MANIFEST_VERSION || '3';
 process.env.FIREFOX = process.env.FIREFOX || (process.argv.includes('--firefox') ? 'true' : 'false');
 
+if (process.argv.includes('--firefox')) {
+  process.env.FIREFOX = 'true';
+}
+
 var webpack = require('webpack'),
   config = require('../webpack.config');
 
