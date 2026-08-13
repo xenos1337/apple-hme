@@ -252,7 +252,6 @@ const HmeGenerator = (props: {
     useState(false);
   const [isUseSubmitting, setIsUseSubmitting] = useState(false);
   const [tabHost, setTabHost] = useState('');
-  const [fwdToEmail, setFwdToEmail] = useState<string>();
 
   const [note, setNote] = useState<string>();
   const [label, setLabel] = useState<string>();
@@ -262,13 +261,9 @@ const HmeGenerator = (props: {
     const fetchHmeList = async () => {
       setHmeError(undefined);
       const cached = await getCachedHmeList(props.client);
-      if (cached && isMounted) {
-        setFwdToEmail(cached.selectedForwardTo);
-      }
 
       try {
-        const result = await refreshHmeListCache(props.client);
-        if (isMounted) setFwdToEmail(result.selectedForwardTo);
+        await refreshHmeListCache(props.client);
       } catch (e) {
         // Keep displaying cached data when the background refresh fails.
         if (!cached && isMounted) setHmeError(e.toString());
@@ -378,9 +373,9 @@ const HmeGenerator = (props: {
       </div>
 
       <section className="rounded-2xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark p-4 shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <button
-            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
             onClick={onEmailRefreshClick}
             disabled={isEmailRefreshSubmitting}
             aria-label="Generate another address"
@@ -391,18 +386,13 @@ const HmeGenerator = (props: {
               className="text-lg"
             />
           </button>
-          <div className="min-w-0 flex-1 pt-0.5">
+          <div className="min-w-0 flex-1">
             <p
               className="break-all text-lg font-semibold leading-6 tracking-tight tabular-nums text-text-light dark:text-text-dark"
               aria-live="polite"
             >
               {hmeEmail}
             </p>
-            {fwdToEmail !== undefined && (
-              <p className="mt-1.5 truncate text-sm text-muted-light dark:text-muted-dark">
-                Forwarding to {fwdToEmail}
-              </p>
-            )}
           </div>
         </div>
         {hmeError && (
