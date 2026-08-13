@@ -1,10 +1,8 @@
 import { faFirefoxBrowser } from '@fortawesome/free-brands-svg-icons';
 import {
-  faArrowLeft,
   faBan,
   faCheck,
   faClipboard,
-  faCog,
   faExternalLink,
   faInfoCircle,
   faList,
@@ -30,7 +28,6 @@ import {
   Link,
   LoadingButton,
   Spinner,
-  ThemeSwitch,
   TitledComponent,
 } from '../../commonComponents';
 import ICloudClient, {
@@ -626,6 +623,52 @@ const searchHmeEmails = (
   return searchResults.map((result) => result.item);
 };
 
+const HmeListLoading = () => (
+  <div
+    className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark"
+    style={{ height: 359 }}
+    role="status"
+    aria-label="Loading email addresses"
+  >
+    <div className="border-r border-line-light dark:border-line-dark">
+      <div className="p-2 border-b border-line-light dark:border-line-dark bg-elevated-light dark:bg-elevated-dark">
+        <div className="h-[42px] rounded-lg bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+      </div>
+      <div className="divide-y divide-line-light dark:divide-line-dark">
+        {[72, 58, 81, 64, 76, 52].map((width, index) => (
+          <div key={index} className="h-[42px] px-3 flex items-center">
+            <div
+              className="h-3 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse"
+              style={{ width: `${width}%` }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="p-3 space-y-5">
+      {[68, 54, 77, 61].map((width, index) => (
+        <div key={index} className="space-y-2">
+          <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
+          <div
+            className="h-3 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse"
+            style={{ width: `${width}%` }}
+          />
+        </div>
+      ))}
+    </div>
+    <span className="sr-only">Loading email addresses</span>
+  </div>
+);
+
+const HmeManagerLoading = () => (
+  <TitledComponent
+    title="Apple Hide My Email"
+    subtitle="Manage your HideMyEmail addresses"
+  >
+    <HmeListLoading />
+  </TitledComponent>
+);
+
 const HmeManager = (props: {
   callback: (action: 'GENERATE' | 'SIGN_OUT') => void;
   signOutCallback: () => void;
@@ -792,7 +835,7 @@ const HmeManager = (props: {
 
   const resolveMainChildComponent = (): ReactNode => {
     if (isFetching) {
-      return <Spinner />;
+      return <HmeListLoading />;
     }
 
     if (hmeEmailsError) {
@@ -1086,6 +1129,8 @@ const AutofillForm = () => {
   );
 };
 
+// Kept available for integrations that render the settings view directly.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Options = () => {
   return (
     <TitledComponent title="Apple Hide My Email" subtitle="Settings">
@@ -1110,86 +1155,62 @@ const Popup = () => {
     'popupState',
     PopupState.SignedOut
   );
-  const [showOptions, setShowOptions] = useState(false);
-
   const [clientState, setClientState, isClientStateLoading] =
     useBrowserStorageState('clientState', undefined);
-  const [clientAuthStateSynced, setClientAuthStateSynced] = useState(false);
 
   useEffect(() => {
-    const syncClientAuthState = async () => {
-      const client =
-        clientState?.setupUrl !== undefined
-          ? constructClient(clientState)
-          : undefined;
-      const isAuthenticated =
-        client !== undefined && (await client.isAuthenticated());
+    if (isClientStateLoading || clientState?.setupUrl === undefined) return;
 
-      if (isAuthenticated) {
-        if (client !== undefined && clientState !== undefined) {
-          const nextClientState = {
-            ...clientState,
-            webservices: client.webservices,
-            ...client.context(),
-          };
-          if (!isEqual(clientState, nextClientState)) {
-            setClientState(nextClientState);
-          }
-        }
-        setState((prevState: PopupState) =>
-          prevState === PopupState.SignedOut
-            ? PopupState.Authenticated
-            : prevState
-        );
-      } else {
+    let isMounted = true;
+    const validatePersistedSession = async () => {
+      const client = constructClient(clientState);
+      const isAuthenticated = await client.isAuthenticated();
+      if (!isMounted) return;
+
+      if (!isAuthenticated) {
         setState(PopupState.SignedOut);
         setClientState(undefined);
         performDeauthSideEffects();
+        return;
       }
 
-      setClientAuthStateSynced(true);
+      const nextClientState = {
+        ...clientState,
+        webservices: client.webservices,
+        ...client.context(),
+      };
+      if (!isEqual(clientState, nextClientState)) {
+        setClientState(nextClientState);
+      }
     };
 
-    !isClientStateLoading && !clientAuthStateSynced && syncClientAuthState();
+    validatePersistedSession().catch(console.error);
+    return () => {
+      isMounted = false;
+    };
   }, [
     setState,
     setClientState,
-    clientAuthStateSynced,
     clientState,
     isClientStateLoading,
   ]);
 
-  if (!clientAuthStateSynced || isStateLoading || isClientStateLoading) {
+  if (isStateLoading || isClientStateLoading) {
     return (
-      <div className="w-full min-h-[180px] flex items-center justify-center p-4 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-        <Spinner />
+      <div className="min-h-full p-5 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+        <HmeManagerLoading />
       </div>
     );
   }
 
-  const currentState = state as PopupState;
+  const currentState =
+    clientState !== undefined && state === PopupState.SignedOut
+      ? PopupState.AuthenticatedAndManaging
+      : (state as PopupState);
   return (
     <div className="min-h-full bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-      <div className="flex justify-between p-2 border-b border-line-light dark:border-line-dark bg-surface-light/80 dark:bg-surface-dark/80">
-        <button
-          onClick={() => setShowOptions(!showOptions)}
-          className="min-w-[40px] min-h-[40px] p-2 rounded-lg text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
-          title={showOptions ? 'Back' : 'Settings'}
-          aria-label={showOptions ? 'Back' : 'Settings'}
-        >
-          <FontAwesomeIcon
-            icon={showOptions ? faArrowLeft : faCog}
-            className="text-lg"
-          />
-        </button>
-        <ThemeSwitch />
-      </div>
       <div className="p-5">
-        {showOptions ? (
-          <Options />
-        ) : (
-          transitionToNextStateElement(currentState, setState, clientState)
-        )}
+        {transitionToNextStateElement(currentState, setState, clientState)}
       </div>
     </div>
   );
