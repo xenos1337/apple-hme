@@ -34,7 +34,6 @@ var compiler = webpack(config);
 
 var server = new WebpackDevServer(
   {
-    https: false,
     hot: false,
     client: false,
     host: 'localhost',
