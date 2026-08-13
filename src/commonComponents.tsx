@@ -18,7 +18,7 @@ export const Logo = () => {
       src="logo.svg"
       alt=""
       aria-hidden="true"
-      className="mx-auto mb-3 h-12 w-auto dark:invert"
+      className="mx-auto mb-3 h-12 w-auto"
     />
   );
 };
