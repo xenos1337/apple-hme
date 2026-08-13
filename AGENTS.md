@@ -125,6 +125,15 @@ Chrome packaging creates a temporary signing key when none is supplied. That cha
 
 ## Before pushing a change
 
+Use short branded branch names:
+
+- `feat-<short-name>` for features
+- `fix-<short-name>` for bug fixes
+- `docs-<short-name>` for documentation
+- `chore-<short-name>` for maintenance
+
+Use short conventional commit messages such as `feat: add release assets`, `fix: unblock CI`, or `docs: add agent guide`. Keep pull request titles and descriptions equally short and readable.
+
 Run:
 
 ```powershell
@@ -143,8 +152,8 @@ Then inspect the change and commit only intended files:
 git status
 git diff
 git add <files>
-git commit -m "Describe the change"
-git push origin <branch>
+git commit -m "fix: unblock CI"
+git push origin feat-<short-name>
 ```
 
 Do not commit `build/`, `artifacts/`, secrets, signing keys, or local environment files.
