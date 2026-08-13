@@ -1,33 +1,98 @@
-name: tests
+name: CI
 
 on:
   push:
     branches:
       - "*"
+    tags:
+      - "v*"
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - uses: actions/cache@v3
-        id: npm-cache
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-nodejs-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nodejs-
-      - name: Install npm deps
-        if: steps.npm-cache.outputs.cache-hit != 'true'
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
         run: npm ci
-      - name: Prettier formatting
-        run: npm run prettier:check
-      - name: Linting
+      - name: TypeScript type check
+        run: npm run typecheck
+      - name: ESLint review
         run: npm run lint
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v4
+
+  build:
+    needs: review
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Read extension version
+        id: version
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+      - name: Verify release version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "$GITHUB_REF_NAME" = "v${{ steps.version.outputs.version }}"
+      - name: Load Chrome signing key
+        if: matrix.browser == 'chrome'
+        env:
+          CHROME_EXTENSION_PRIVATE_KEY: ${{ secrets.CHROME_EXTENSION_PRIVATE_KEY }}
+        run: |
+          if [ -n "$CHROME_EXTENSION_PRIVATE_KEY" ]; then
+            printf '%s' "$CHROME_EXTENSION_PRIVATE_KEY" > "$RUNNER_TEMP/chrome-extension.pem"
+          fi
+      - name: Build Chrome extension
+        if: matrix.browser == 'chrome'
+        run: npm run build && npm run package:chrome
+        env:
+          CHROME_EXTENSION_PRIVATE_KEY_PATH: ${{ runner.temp }}/chrome-extension.pem
+      - name: Build Firefox extension
+        if: matrix.browser == 'firefox'
+        run: npm run build:firefox && npm run package:firefox
+      - name: Upload ${{ matrix.browser }} artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: icloud-hide-my-email-${{ matrix.browser }}-v${{ steps.version.outputs.version }}
+          path: artifacts/${{ matrix.browser }}/*
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download browser artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: icloud-hide-my-email-*
+          path: release
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --generate-notes

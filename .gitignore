@@ -8,6 +8,9 @@
 
 # production
 /build
+/artifacts
+*.pem
+*.crx
 
 # misc
 .DS_Store

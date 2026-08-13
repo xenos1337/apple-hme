@@ -103,8 +103,17 @@ Note: the following console commands are to be executed from the root directory 
 | 6 | Publish | [Chrome webstore dev console](https://chrome.google.com/webstore/devconsole/) | [Mozilla Add-on developer hub](https://addons.mozilla.org/en-US/developers/addon/icloud-hide-my-email/versions/submit/) |
 <!-- prettier-ignore-end -->
 
+### CI/CD
+
+GitHub Actions runs the review gates (TypeScript type checking, ESLint, and dependency review on pull requests) and builds browser packages for every push and pull request. The build artifacts are uploaded to the workflow run:
+
+- Chrome: a Web Store `.zip` and a developer-installable `.crx`
+- Firefox: an AMO-ready `.zip`
+
+To publish a GitHub release, update `package.json`, commit the change, and push a matching tag such as `v1.3.1`. The tag workflow attaches all browser artifacts to the release. Chrome builds use a temporary signing key by default; configure the repository secret `CHROME_EXTENSION_PRIVATE_KEY` with the PEM private key used for the extension if the Chrome extension ID must remain stable across releases.
+
 ### TODOs
 
 - [ ] Ability to modify the label and note of existing HME addresses
-- [ ] CI and maybe CD
+- [ ] Automated publishing to the Chrome Web Store and Firefox Add-ons
 - [ ] Dependabot

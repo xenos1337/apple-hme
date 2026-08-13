@@ -2,6 +2,7 @@
 process.env.NODE_ENV = 'production';
 process.env.ASSET_PATH = '/';
 process.env.MANIFEST_VERSION = process.env.MANIFEST_VERSION || '3';
+process.env.FIREFOX = process.env.FIREFOX || (process.argv.includes('--firefox') ? 'true' : 'false');
 
 var webpack = require('webpack'),
   config = require('../webpack.config');
