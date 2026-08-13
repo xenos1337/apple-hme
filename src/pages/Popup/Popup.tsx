@@ -1,8 +1,10 @@
 import { faFirefoxBrowser } from '@fortawesome/free-brands-svg-icons';
 import {
+  faArrowLeft,
   faBan,
   faCheck,
   faClipboard,
+  faCog,
   faExternalLink,
   faInfoCircle,
   faList,
@@ -28,6 +30,7 @@ import {
   Link,
   LoadingButton,
   Spinner,
+  ThemeSwitch,
   TitledComponent,
 } from '../../commonComponents';
 import ICloudClient, {
@@ -194,17 +197,13 @@ const FooterButton = (
     HTMLButtonElement
   >
 ) => {
-  const { label, icon, className, ...buttonProps } = props;
-
   return (
     <button
-      className={`w-full min-h-[40px] justify-center px-2 inline-flex items-center text-sm text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-lg ${
-        className || ''
-      }`}
-      {...buttonProps}
+      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
+      {...props}
     >
-      <FontAwesomeIcon icon={icon} className="mr-1" />
-      {label}
+      <FontAwesomeIcon icon={props.icon} className="mr-1" />
+      {props.label}
     </button>
   );
 };
@@ -224,6 +223,7 @@ const SignOutButton = (props: {
 }) => {
   return (
     <FooterButton
+      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
       onClick={async () => {
         await props.client.signOut();
         setBrowserStorageValue('clientState', undefined);
@@ -252,6 +252,7 @@ const HmeGenerator = (props: {
     useState(false);
   const [isUseSubmitting, setIsUseSubmitting] = useState(false);
   const [tabHost, setTabHost] = useState('');
+  const [fwdToEmail, setFwdToEmail] = useState<string>();
 
   const [note, setNote] = useState<string>();
   const [label, setLabel] = useState<string>();
@@ -261,9 +262,13 @@ const HmeGenerator = (props: {
     const fetchHmeList = async () => {
       setHmeError(undefined);
       const cached = await getCachedHmeList(props.client);
+      if (cached && isMounted) {
+        setFwdToEmail(cached.selectedForwardTo);
+      }
 
       try {
-        await refreshHmeListCache(props.client);
+        const result = await refreshHmeListCache(props.client);
+        if (isMounted) setFwdToEmail(result.selectedForwardTo);
       } catch (e) {
         // Keep displaying cached data when the background refresh fails.
         if (!cached && isMounted) setHmeError(e.toString());
@@ -356,126 +361,104 @@ const HmeGenerator = (props: {
     isEmailRefreshSubmitting || hmeEmail == reservedHme?.hme;
 
   const reservationFormInputClassName =
-    'appearance-none rounded-xl relative block w-full min-h-[44px] px-3.5 py-2.5 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:z-10 sm:text-sm transition-[border-color,box-shadow] duration-150';
+    'appearance-none rounded-lg relative block w-full min-h-[42px] px-3 py-2 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:z-10 sm:text-sm';
 
   return (
-    <main className="space-y-5">
-      <div className="space-y-1 pt-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-light dark:text-muted-dark">
-          New address
-        </p>
-        <h1 className="text-xl font-semibold tracking-tight text-text-light dark:text-text-dark text-balance">
-          Create an address for{' '}
-          <span className="text-primary-light dark:text-muted-dark">
-            {tabHost || 'this site'}
-          </span>
-        </h1>
-      </div>
-
-      <section className="rounded-2xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark p-4 shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-        <div className="flex items-center gap-3">
-          <button
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
-            onClick={onEmailRefreshClick}
-            disabled={isEmailRefreshSubmitting}
-            aria-label="Generate another address"
-          >
-            <FontAwesomeIcon
-              icon={faRefresh}
-              spin={isEmailRefreshSubmitting}
-              className="text-lg"
-            />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p
-              className="break-all text-lg font-semibold leading-6 tracking-tight tabular-nums text-text-light dark:text-text-dark"
-              aria-live="polite"
-            >
+    <div className="flex w-full items-center justify-center py-8">
+      <TitledComponent
+        title="Apple Hide My Email"
+        subtitle={`Create an address for '${tabHost}'`}
+      >
+        <div className="text-center space-y-1">
+          <div>
+            <span className="text-2xl font-semibold tracking-tight tabular-nums">
+              <button
+                className="mr-2 min-w-[40px] min-h-[40px] rounded-lg text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
+                onClick={onEmailRefreshClick}
+                aria-label="Generate another address"
+              >
+                <FontAwesomeIcon
+                  className="align-text-bottom"
+                  icon={faRefresh}
+                  spin={isEmailRefreshSubmitting}
+                />
+              </button>
               {hmeEmail}
-            </p>
+            </span>
+            {fwdToEmail !== undefined && (
+              <p className="mt-1 text-sm text-muted-light dark:text-muted-dark">
+                Forward to: {fwdToEmail}
+              </p>
+            )}
           </div>
+          {hmeError && <ErrorMessage>{hmeError}</ErrorMessage>}
         </div>
-        {hmeError && (
-          <div className="mt-3">
-            <ErrorMessage>{hmeError}</ErrorMessage>
+        {hmeEmail && (
+          <div className="space-y-3">
+            <form
+              className={`space-y-3 ${
+                isReservationFormDisabled ? 'opacity-70' : ''
+              }`}
+              onSubmit={onUseSubmit}
+            >
+              <div>
+                <label htmlFor="label" className="block font-medium">
+                  Label
+                </label>
+                <input
+                  id="label"
+                  placeholder={tabHost}
+                  required
+                  value={label || ''}
+                  onChange={(e) => setLabel(e.target.value)}
+                  className={reservationFormInputClassName}
+                  disabled={isReservationFormDisabled}
+                />
+              </div>
+              <div>
+                <label htmlFor="note" className="block font-medium">
+                  Note
+                </label>
+                <textarea
+                  id="note"
+                  rows={1}
+                  className={reservationFormInputClassName}
+                  placeholder="Make a note (optional)"
+                  value={note || ''}
+                  onChange={(e) => setNote(e.target.value)}
+                  disabled={isReservationFormDisabled}
+                ></textarea>
+              </div>
+              <LoadingButton
+                loading={isUseSubmitting}
+                disabled={isReservationFormDisabled}
+              >
+                Use
+              </LoadingButton>
+              {reserveError && <ErrorMessage>{reserveError}</ErrorMessage>}
+            </form>
+            {reservedHme && <ReservationResult hme={reservedHme} />}
           </div>
         )}
-      </section>
-      {hmeEmail && (
-        <div className="space-y-4">
-          <form
-            className={`space-y-4 ${
-              isReservationFormDisabled ? 'opacity-70' : ''
-            }`}
-            onSubmit={onUseSubmit}
+        <div className="flex justify-evenly items-center">
+          <FooterButton
+            onClick={() => props.callback('MANAGE')}
+            icon={faList}
+            label="Manage emails"
+          />
+          <a
+            href={browser.runtime.getURL('userguide.html')}
+            target="_blank"
+            rel="noreferrer"
+            className="min-h-[40px] px-2 text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md inline-flex items-center"
           >
-            <div>
-              <label
-                htmlFor="label"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-light dark:text-muted-dark"
-              >
-                Label
-              </label>
-              <input
-                id="label"
-                placeholder={tabHost}
-                required
-                value={label || ''}
-                onChange={(e) => setLabel(e.target.value)}
-                className={reservationFormInputClassName}
-                disabled={isReservationFormDisabled}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="note"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-light dark:text-muted-dark"
-              >
-                Note
-              </label>
-              <textarea
-                id="note"
-                rows={1}
-                className={reservationFormInputClassName}
-                placeholder="Make a note (optional)"
-                value={note || ''}
-                onChange={(e) => setNote(e.target.value)}
-                disabled={isReservationFormDisabled}
-              ></textarea>
-            </div>
-            <LoadingButton
-              loading={isUseSubmitting}
-              disabled={isReservationFormDisabled}
-              className="dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-            >
-              Use
-            </LoadingButton>
-            {reserveError && <ErrorMessage>{reserveError}</ErrorMessage>}
-          </form>
-          {reservedHme && <ReservationResult hme={reservedHme} />}
+            <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
+            Help
+          </a>
+          <SignOutButton callback={props.signOutCallback} client={props.client} />
         </div>
-      )}
-      <nav
-        className="grid grid-cols-3 gap-1 border-t border-line-light dark:border-line-dark pt-3"
-        aria-label="Popup navigation"
-      >
-        <FooterButton
-          onClick={() => props.callback('MANAGE')}
-          icon={faList}
-          label="Manage emails"
-        />
-        <a
-          href={browser.runtime.getURL('userguide.html')}
-          target="_blank"
-          rel="noreferrer"
-          className="w-full min-h-[40px] justify-center px-2 text-sm text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-lg inline-flex items-center"
-        >
-          <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
-          Help
-        </a>
-        <SignOutButton callback={props.signOutCallback} client={props.client} />
-      </nav>
-    </main>
+      </TitledComponent>
+    </div>
   );
 };
 
@@ -645,52 +628,6 @@ const searchHmeEmails = (
   return searchResults.map((result) => result.item);
 };
 
-const HmeListLoading = () => (
-  <div
-    className="grid grid-cols-2 overflow-hidden rounded-xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark"
-    style={{ height: 359 }}
-    role="status"
-    aria-label="Loading email addresses"
-  >
-    <div className="border-r border-line-light dark:border-line-dark">
-      <div className="p-2 border-b border-line-light dark:border-line-dark bg-elevated-light dark:bg-elevated-dark">
-        <div className="h-[42px] rounded-lg bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-      </div>
-      <div className="divide-y divide-line-light dark:divide-line-dark">
-        {[72, 58, 81, 64, 76, 52].map((width, index) => (
-          <div key={index} className="h-[42px] px-3 flex items-center">
-            <div
-              className="h-3 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse"
-              style={{ width: `${width}%` }}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-    <div className="p-3 space-y-5">
-      {[68, 54, 77, 61].map((width, index) => (
-        <div key={index} className="space-y-2">
-          <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse" />
-          <div
-            className="h-3 rounded bg-zinc-200 dark:bg-zinc-800 animate-pulse"
-            style={{ width: `${width}%` }}
-          />
-        </div>
-      ))}
-    </div>
-    <span className="sr-only">Loading email addresses</span>
-  </div>
-);
-
-const HmeManagerLoading = () => (
-  <TitledComponent
-    title="Apple Hide My Email"
-    subtitle="Manage your HideMyEmail addresses"
-  >
-    <HmeListLoading />
-  </TitledComponent>
-);
-
 const HmeManager = (props: {
   callback: (action: 'GENERATE' | 'SIGN_OUT') => void;
   signOutCallback: () => void;
@@ -857,7 +794,7 @@ const HmeManager = (props: {
 
   const resolveMainChildComponent = (): ReactNode => {
     if (isFetching) {
-      return <HmeListLoading />;
+      return <Spinner />;
     }
 
     if (hmeEmailsError) {
@@ -1177,6 +1114,7 @@ const Popup = () => {
     'popupState',
     PopupState.SignedOut
   );
+  const [showOptions, setShowOptions] = useState(false);
   const [clientState, setClientState, isClientStateLoading] =
     useBrowserStorageState('clientState', undefined);
 
@@ -1210,12 +1148,17 @@ const Popup = () => {
     return () => {
       isMounted = false;
     };
-  }, [setState, setClientState, clientState, isClientStateLoading]);
+  }, [
+    setState,
+    setClientState,
+    clientState,
+    isClientStateLoading,
+  ]);
 
   if (isStateLoading || isClientStateLoading) {
     return (
-      <div className="min-h-full p-5 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-        <HmeManagerLoading />
+      <div className="w-full min-h-[180px] flex items-center justify-center p-4 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+        <Spinner />
       </div>
     );
   }
@@ -1226,8 +1169,26 @@ const Popup = () => {
       : (state as PopupState);
   return (
     <div className="min-h-full bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
+      <div className="flex justify-between p-2 border-b border-line-light dark:border-line-dark bg-surface-light/80 dark:bg-surface-dark/80">
+        <button
+          onClick={() => setShowOptions(!showOptions)}
+          className="min-w-[40px] min-h-[40px] p-2 rounded-lg text-muted-light dark:text-muted-dark hover:text-text-light dark:hover:text-text-dark hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
+          title={showOptions ? 'Back' : 'Settings'}
+          aria-label={showOptions ? 'Back' : 'Settings'}
+        >
+          <FontAwesomeIcon
+            icon={showOptions ? faArrowLeft : faCog}
+            className="text-lg"
+          />
+        </button>
+        <ThemeSwitch />
+      </div>
       <div className="p-5">
-        {transitionToNextStateElement(currentState, setState, clientState)}
+        {showOptions ? (
+          <Options />
+        ) : (
+          transitionToNextStateElement(currentState, setState, clientState)
+        )}
       </div>
     </div>
   );

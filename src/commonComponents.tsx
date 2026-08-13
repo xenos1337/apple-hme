@@ -46,10 +46,10 @@ export const LoadingButton = (
   const { loading, disabled, className, ...btnHtmlAttrs } = props;
 
   const defaultClassName =
-    'relative w-full min-h-[42px] justify-center text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]';
+    'w-full min-h-[42px] justify-center text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:outline-none focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]';
 
   const disabledClassName =
-    'relative w-full min-h-[42px] justify-center text-zinc-500 dark:text-zinc-600 bg-zinc-200 dark:bg-zinc-900 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center';
+    'w-full min-h-[42px] justify-center text-zinc-500 dark:text-zinc-600 bg-zinc-200 dark:bg-zinc-900 font-semibold rounded-lg px-5 py-2.5 text-center inline-flex items-center';
 
   const btnClassName = `${disabled ? disabledClassName : defaultClassName} ${
     className || ''
@@ -63,11 +63,7 @@ export const LoadingButton = (
       {...btnHtmlAttrs}
     >
       {loading && !disabled && (
-        <FontAwesomeIcon
-          icon={faSpinner}
-          spin={true}
-          className="absolute left-4"
-        />
+        <FontAwesomeIcon icon={faSpinner} spin={true} className="mr-1" />
       )}
       {props.children}
     </button>
