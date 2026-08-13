@@ -49,79 +49,119 @@ on input fields.
 
 You can enable/disable any of the autofilling mechanisms through the Options page of the extension.
 
-## Develop
+## Development
 
-This extension is entirely written in TypeScript. The UI pages of the extension (e.g. Pop-Up and Options) are implemented as React apps and styled with TailwindCSS.
+The extension is written in TypeScript. Its popup and options pages use React
+and Tailwind CSS.
 
-### Environment
+### Prerequisites
 
-Development was carried out in the following environment:
+- Node.js 18 or newer (`.nvmrc` selects Node.js 18; CI uses Node.js 22)
+- npm
+- Chrome, another Chromium browser, or Firefox
+
+If you use nvm, install and select the expected Node.js version before
+installing dependencies:
 
 ```console
-$ sw_vers
-ProductName:	macOS
-ProductVersion:	12.5
-BuildVersion:	21G72
-
-$ sysctl kern.version
-kern.version: Darwin Kernel Version 21.6.0: Sat Jun 18 17:07:25 PDT 2022; root:xnu-8020.140.41~1/RELEASE_X86_64
-
-$ node --version
-v18.11.0
-
-$ npm --version
-8.19.2
-
-$ pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep version  # CommandLineTools needed for node-gyp
-version: 13.4.0.0.1.1651278267
-
-$ python3 --version  # needed for node-gyp
-Python 3.10.5
+nvm install
+nvm use
+npm ci
 ```
 
-The above versions should not be regarded as hard version pins. This is just a combination of versions that happened to successfully build the extension on my machine. The following Dockerfile has been used to successfully build the extension and provides a much cleaner runtime contract:
+Run all commands from the repository root.
 
-```Dockerfile
-FROM node:18.12.1-alpine3.17
+### Develop in Chrome
 
-RUN apk add --update --no-cache g++ make python3
+Start the development server:
 
-ADD . /opt/extension
-
-WORKDIR /opt/extension
-
-ENTRYPOINT ["sh"]
+```console
+npm run start
 ```
 
-### Development workflow
+The server watches the source files and writes the extension to `build/`. Load
+that directory as an unpacked extension from `chrome://extensions`. See
+Chrome's [development guide](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked)
+for browser-specific instructions.
 
-The table below outlines the sequence of steps that need to be followed in order to ship a change in the extension. The execution of some of these steps varies per browser engine.
+Refresh the extension from the extensions page after changing background
+scripts, the manifest, or other files that Chrome does not reload itself.
 
-Note: the following console commands are to be executed from the root directory of this repo
+### Develop in Firefox
 
-<!-- prettier-ignore-start -->
-| # | Description | Chromium | Firefox |
-| - | - | - | - |
-| 0 | Install deps | `npm ci` | `npm ci && npm i -g web-ext` |
-| 1 | Spin up the DevServer. The server generates the `build` dir. | `npm run start` | `npm run start:firefox` |
-| 2 | Load the unpacked extension on the browser |  The `build` dir can be loaded as an unpacked extension through the browser's UI. See the relevant [Google Chrome guide](https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/#load-unpacked). | `web-ext -s build run` |
-| 3 | Develop against the local browser instance on which the `build` dir is loaded | N/A | N/A |
-| 4 | Build productionised artefact | `npm run build` | `npm run build:firefox` |
-| 5 | Compress productionised artefact | `zip build.zip ./build/*` | `web-ext -s build build` |
-| 6 | Publish | [Chrome webstore dev console](https://chrome.google.com/webstore/devconsole/) | [Mozilla Add-on developer hub](https://addons.mozilla.org/developers/) |
-<!-- prettier-ignore-end -->
+Start the Firefox development build:
+
+```console
+npm run start:firefox
+```
+
+In another terminal, launch the generated extension with `web-ext`:
+
+```console
+npx --yes web-ext@8.3.0 run --source-dir build
+```
+
+### Run the checks
+
+Before opening a pull request, run the code and formatting checks:
+
+```console
+npm run typecheck
+npm run lint
+npm run prettier:check
+```
+
+To apply the repository's formatting rules, run `npm run prettier`.
+
+### Build packages
+
+Create a production build and package it for the target browser:
+
+```console
+# Chrome
+npm run build
+npm run package:chrome
+
+# Firefox
+npm run build:firefox
+npm run package:firefox
+```
+
+Chrome packages are written to `artifacts/chrome/`. This directory contains a
+Web Store-ready `.zip` and a developer-installable `.crx`. Firefox packages are
+written to `artifacts/firefox/` as an AMO-ready `.zip`.
+
+The Chrome packager creates a temporary signing key by default. Set
+`CHROME_EXTENSION_PRIVATE_KEY_PATH` to an existing PEM private key when you
+need the local `.crx` to keep the same extension ID.
 
 ### CI/CD
 
-GitHub Actions runs the review gates (TypeScript type checking, ESLint, and dependency review on pull requests) and builds browser packages for every push and pull request. The build artifacts are uploaded to the workflow run:
+GitHub Actions checks every push and every pull request targeting `main`. It
+runs the TypeScript and ESLint checks, reviews dependency changes on pull
+requests, builds both browser packages, and keeps the artifacts for 30 days.
 
-- Chrome: a Web Store `.zip` and a developer-installable `.crx`
-- Firefox: an AMO-ready `.zip`
+### Publish a release
 
-To publish a GitHub release, update `package.json`, commit the change, and push a matching tag such as `v1.3.1`. The tag workflow attaches all browser artifacts to the release. Chrome builds use a temporary signing key by default; configure the repository secret `CHROME_EXTENSION_PRIVATE_KEY` with the PEM private key used for the extension if the Chrome extension ID must remain stable across releases.
+1. Update the version in `package.json`, for example to `1.3.1`.
+2. Commit and push the version change.
+3. Create and push a matching tag:
 
-### TODOs
+   ```console
+   git tag v1.3.1
+   git push origin v1.3.1
+   ```
 
-- [ ] Ability to modify the label and note of existing HME addresses
-- [ ] Automated publishing to the Chrome Web Store and Firefox Add-ons
-- [ ] Dependabot
+The tag workflow verifies that the tag matches the version in `package.json`,
+creates a GitHub release with generated notes, and attaches the Chrome and
+Firefox packages.
+
+Chrome release packages use a temporary signing key unless the repository
+secret `CHROME_EXTENSION_PRIVATE_KEY` contains the extension's PEM private key.
+Use the same key for every release to keep the Chrome extension ID stable.
+
+## Roadmap
+
+- [ ] Allow users to edit the label and note of an existing Hide My Email address
+- [ ] Publish releases automatically to the Chrome Web Store and Firefox Add-ons
+- [ ] Configure Dependabot for npm and GitHub Actions updates
