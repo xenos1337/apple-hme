@@ -1,5 +1,8 @@
 import browser from 'webextension-polyfill';
-import ICloudClient, { ICloudClientContext } from './iCloudClient';
+import ICloudClient, {
+  ICloudClientContext,
+  ListHmeResult,
+} from './iCloudClient';
 import { PopupState } from './pages/Popup/stateMachine';
 
 export type Autofill = {
@@ -11,6 +14,12 @@ export type Options = {
   theme?: 'light' | 'dark' | 'system';
 };
 
+export type HmeListCache = {
+  clientKey: string;
+  result: ListHmeResult;
+  cachedAt: number;
+};
+
 export type Store = {
   popupState: PopupState;
   clientState?: {
@@ -19,6 +28,7 @@ export type Store = {
   } & ICloudClientContext;
   iCloudHmeOptions: Options;
   theme: 'light' | 'dark' | 'system';
+  hmeListCache?: HmeListCache;
 } & {
   [K in `hme_xpath_${string}`]?: string;
 } & {

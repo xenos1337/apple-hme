@@ -56,6 +56,13 @@ import {
   SIGNED_OUT_CTA_COPY,
 } from '../Background/constants';
 import { PopupState, STATE_MACHINE_TRANSITIONS } from './stateMachine';
+import {
+  clearHmeListCache,
+  getCachedHmeList,
+  refreshHmeListCache,
+  updateCachedHmeList,
+  updateCachedEmail,
+} from '../../hmeCache';
 
 const SignInInstructions = () => {
   const userguideUrl = browser.runtime.getURL('userguide.html');
@@ -220,6 +227,7 @@ const SignOutButton = (props: {
       onClick={async () => {
         await props.client.signOut();
         setBrowserStorageValue('clientState', undefined);
+        clearHmeListCache().catch(console.debug);
         performDeauthSideEffects();
         props.callback();
       }}
@@ -250,18 +258,27 @@ const HmeGenerator = (props: {
   const [label, setLabel] = useState<string>();
 
   useEffect(() => {
+    let isMounted = true;
     const fetchHmeList = async () => {
       setHmeError(undefined);
+      const cached = await getCachedHmeList(props.client);
+      if (cached && isMounted) {
+        setFwdToEmail(cached.selectedForwardTo);
+      }
+
       try {
-        const pms = new PremiumMailSettings(props.client);
-        const result = await pms.listHme();
-        setFwdToEmail(result.selectedForwardTo);
+        const result = await refreshHmeListCache(props.client);
+        if (isMounted) setFwdToEmail(result.selectedForwardTo);
       } catch (e) {
-        setHmeError(e.toString());
+        // Keep displaying cached data when the background refresh fails.
+        if (!cached && isMounted) setHmeError(e.toString());
       }
     };
 
-    fetchHmeList();
+    fetchHmeList().catch(console.error);
+    return () => {
+      isMounted = false;
+    };
   }, [props.client]);
 
   useEffect(() => {
@@ -321,9 +338,16 @@ const HmeGenerator = (props: {
     if (hmeEmail !== undefined) {
       try {
         const pms = new PremiumMailSettings(props.client);
-        setReservedHme(
-          await pms.reserveHme(hmeEmail, label || tabHost, note || undefined)
+        const reservedHme = await pms.reserveHme(
+          hmeEmail,
+          label || tabHost,
+          note || undefined
         );
+        setReservedHme(reservedHme);
+        await updateCachedHmeList(props.client, (result) => ({
+          ...result,
+          hmeEmails: [reservedHme, ...result.hmeEmails],
+        }));
         setLabel(undefined);
         setNote(undefined);
       } catch (e) {
@@ -614,23 +638,39 @@ const HmeManager = (props: {
   const [searchPrompt, setSearchPrompt] = useState<string>();
 
   useEffect(() => {
+    let isMounted = true;
     const fetchHmeList = async () => {
       setHmeEmailsError(undefined);
-      setIsFetching(true);
-      try {
-        const pms = new PremiumMailSettings(props.client);
-        const result = await pms.listHme();
+      const cached = await getCachedHmeList(props.client);
+      if (cached && isMounted) {
         setFetchedHmeEmails(
-          result.hmeEmails.sort((a, b) => b.createTimestamp - a.createTimestamp)
+          [...cached.hmeEmails].sort(
+            (a, b) => b.createTimestamp - a.createTimestamp
+          )
         );
-      } catch (e) {
-        setHmeEmailsError(e.toString());
-      } finally {
         setIsFetching(false);
+      }
+
+      try {
+        const result = await refreshHmeListCache(props.client);
+        if (isMounted) {
+          setFetchedHmeEmails(
+            [...result.hmeEmails].sort(
+              (a, b) => b.createTimestamp - a.createTimestamp
+            )
+          );
+        }
+      } catch (e) {
+        if (!cached && isMounted) setHmeEmailsError(e.toString());
+      } finally {
+        if (isMounted) setIsFetching(false);
       }
     };
 
-    fetchHmeList();
+    fetchHmeList().catch(console.error);
+    return () => {
+      isMounted = false;
+    };
   }, [props.client]);
 
   const activationCallbackFactory = (hmeEmail: HmeEmail) => () => {
@@ -640,12 +680,22 @@ const HmeManager = (props: {
         isEqual(item, hmeEmail) ? newHmeEmail : item
       )
     );
+    updateCachedHmeList(
+      props.client,
+      updateCachedEmail(hmeEmail, () => newHmeEmail)
+    ).catch(console.debug);
   };
 
   const deletionCallbackFactory = (hmeEmail: HmeEmail) => () => {
     setFetchedHmeEmails((prevFetchedHmeEmails) =>
       prevFetchedHmeEmails?.filter((item) => !isEqual(item, hmeEmail))
     );
+    updateCachedHmeList(props.client, (result) => ({
+      ...result,
+      hmeEmails: result.hmeEmails.filter(
+        (item) => item.anonymousId !== hmeEmail.anonymousId
+      ),
+    })).catch(console.debug);
   };
 
   const hmeListGrid = (fetchedHmeEmails: HmeEmail[]) => {
@@ -873,6 +923,7 @@ const SelectFwdToForm = () => {
     useBrowserStorageState('clientState', undefined);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchHmeList = async () => {
       setListHmeError(undefined);
       setIsFetching(true);
@@ -888,10 +939,18 @@ const SelectFwdToForm = () => {
         clientState.webservices,
         clientState
       );
+      const cached = await getCachedHmeList(client);
+      if (cached && isMounted) {
+        setFwdToEmails(cached.forwardToEmails);
+        setSelectedFwdToEmail(cached.selectedForwardTo);
+        setIsFetching(false);
+      }
       const isClientAuthenticated = await client.isAuthenticated();
       if (!isClientAuthenticated) {
-        setListHmeError(SELECT_FWD_TO_SIGNED_OUT_CTA_COPY);
-        setIsFetching(false);
+        if (!cached && isMounted) {
+          setListHmeError(SELECT_FWD_TO_SIGNED_OUT_CTA_COPY);
+          setIsFetching(false);
+        }
         return;
       }
 
@@ -905,22 +964,26 @@ const SelectFwdToForm = () => {
       }
 
       try {
-        const pms = new PremiumMailSettings(client);
-        const result = await pms.listHme();
-        setFwdToEmails((prevState) =>
-          isEqual(prevState, result.forwardToEmails)
-            ? prevState
-            : result.forwardToEmails
-        );
-        setSelectedFwdToEmail(result.selectedForwardTo);
+        const result = await refreshHmeListCache(client);
+        if (isMounted) {
+          setFwdToEmails((prevState) =>
+            isEqual(prevState, result.forwardToEmails)
+              ? prevState
+              : result.forwardToEmails
+          );
+          setSelectedFwdToEmail(result.selectedForwardTo);
+        }
       } catch (e) {
-        setListHmeError(e.toString());
+        if (!cached && isMounted) setListHmeError(e.toString());
       } finally {
-        setIsFetching(false);
+        if (isMounted) setIsFetching(false);
       }
     };
 
-    !isClientStateLoading && fetchHmeList();
+    !isClientStateLoading && fetchHmeList().catch(console.error);
+    return () => {
+      isMounted = false;
+    };
   }, [clientState, isClientStateLoading, setClientState]);
 
   const onSelectedFwdToSubmit = async (
@@ -940,6 +1003,10 @@ const SelectFwdToForm = () => {
         );
         const pms = new PremiumMailSettings(client);
         await pms.updateForwardToHme(selectedFwdToEmail);
+        await updateCachedHmeList(client, (result) => ({
+          ...result,
+          selectedForwardTo: selectedFwdToEmail,
+        }));
       } catch (e) {
         setUpdateFwdToError(e.toString());
       }

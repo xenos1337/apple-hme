@@ -29,6 +29,7 @@ import {
   SIGNED_IN_CTA_COPY,
   SIGNED_OUT_CTA_COPY,
 } from './constants';
+import { clearHmeListCache } from '../../hmeCache';
 
 const constructClient = async (): Promise<ICloudClient> => {
   const clientState = await getBrowserStorageValue('clientState');
@@ -64,6 +65,7 @@ const authenticateClient = async (client: ICloudClient): Promise<boolean> => {
 const performDeauthSideEffects = () => {
   setBrowserStorageValue('popupState', DEFAULT_STORE.popupState);
   setBrowserStorageValue('clientState', DEFAULT_STORE.clientState);
+  clearHmeListCache().catch(console.debug);
 
   browser.contextMenus
     .update(CONTEXT_MENU_ITEM_ID, {
