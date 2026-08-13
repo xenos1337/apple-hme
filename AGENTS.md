@@ -125,6 +125,15 @@ Chrome packaging creates a temporary signing key when none is supplied. That cha
 
 ## Before pushing a change
 
+Use short branded branch names (hyphens, no `t3code/` prefix):
+
+- `feat-<short-name>` for features
+- `fix-<short-name>` for bug fixes
+- `docs-<short-name>` for documentation
+- `chore-<short-name>` for maintenance
+
+Use short conventional commit messages such as `feat: add release assets`, `fix: unblock CI`, or `docs: add agent guide`. Keep pull request titles and descriptions equally short and readable.
+
 Run:
 
 ```powershell
@@ -143,8 +152,8 @@ Then inspect the change and commit only intended files:
 git status
 git diff
 git add <files>
-git commit -m "Describe the change"
-git push origin <branch>
+git commit -m "fix: unblock CI"
+git push origin feat-<short-name>
 ```
 
 Do not commit `build/`, `artifacts/`, secrets, signing keys, or local environment files.
@@ -206,7 +215,7 @@ git push origin v1.3.1
 
 The tag must exactly match `v${package.json.version}`. For example, package version `1.3.1` requires tag `v1.3.1`.
 
-The tag workflow then checks the code, builds both browser variants, creates the GitHub Release with generated notes, and attaches the Chrome CRX, Chrome ZIP, and Firefox ZIP.
+The tag workflow then checks the code, builds both browser variants, creates the GitHub Release with generated notes, and attaches the Chrome CRX, Chrome ZIP, and Firefox ZIP. The published-release trigger supports rerunning builds for an already-created GitHub Release.
 
 ### Alternative: publish from the GitHub Releases UI
 
