@@ -125,7 +125,7 @@ Chrome packaging creates a temporary signing key when none is supplied. That cha
 
 ## Before pushing a change
 
-Use short branded branch names:
+Use short branded branch names (hyphens, no `t3code/` prefix):
 
 - `feat-<short-name>` for features
 - `fix-<short-name>` for bug fixes
@@ -215,7 +215,7 @@ git push origin v1.3.1
 
 The tag must exactly match `v${package.json.version}`. For example, package version `1.3.1` requires tag `v1.3.1`.
 
-The tag workflow then checks the code, builds both browser variants, creates the GitHub Release with generated notes, and attaches the Chrome CRX, Chrome ZIP, and Firefox ZIP.
+The tag workflow then checks the code, builds both browser variants, creates the GitHub Release with generated notes, and attaches the Chrome CRX, Chrome ZIP, and Firefox ZIP. The published-release trigger supports rerunning builds for an already-created GitHub Release.
 
 ### Alternative: publish from the GitHub Releases UI
 
