@@ -267,10 +267,10 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   // Show loading state in the right input
-  sendMessageToTab(
+  await sendMessageToTab(
     MessageType.Autofill,
     {
-      data: LOADING_COPY,
+      loading: true,
     } as AutofillData,
     tab
   );
@@ -282,7 +282,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   const isClientAuthenticated = await authenticateClient(client);
 
   if (!isClientAuthenticated) {
-    sendMessageToTab(
+    await sendMessageToTab(
       MessageType.Autofill,
       {
         data: SIGNED_OUT_CTA_COPY,
@@ -307,7 +307,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       tab
     );
   } catch (e) {
-    sendMessageToTab(
+    await sendMessageToTab(
       MessageType.Autofill,
       {
         data: e.toString(),

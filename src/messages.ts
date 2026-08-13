@@ -16,9 +16,8 @@ export type Message<T> = {
 };
 
 export type AutofillData = {
-  data: string;
   inputElementXPath?: string;
-};
+} & ({ data: string; loading?: false } | { loading: true; data?: never });
 
 export type ReservationRequestData = {
   hme: string;

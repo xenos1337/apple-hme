@@ -24,6 +24,70 @@ const getElementByXPath = (xpath: string): Element | null => {
   }
 };
 
+const LOADING_OVERLAY_ATTRIBUTE = 'data-apple-hme-loading-overlay';
+
+let loadingOverlay: HTMLSpanElement | undefined;
+let loadingOverlayAnimation: Animation | undefined;
+let removeLoadingOverlayListeners: (() => void) | undefined;
+
+const removeLoadingOverlay = (): void => {
+  loadingOverlayAnimation?.cancel();
+  loadingOverlayAnimation = undefined;
+  loadingOverlay?.remove();
+  loadingOverlay = undefined;
+  removeLoadingOverlayListeners?.();
+  removeLoadingOverlayListeners = undefined;
+};
+
+const showLoadingOverlay = (targetElement: HTMLInputElement): void => {
+  removeLoadingOverlay();
+
+  const overlay = document.createElement('span');
+  overlay.setAttribute(LOADING_OVERLAY_ATTRIBUTE, 'true');
+  overlay.setAttribute('role', 'status');
+  overlay.setAttribute('aria-label', 'Generating Hide My Email address');
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    width: '14px',
+    height: '14px',
+    boxSizing: 'border-box',
+    display: 'block',
+    border: '2px solid rgba(128, 128, 128, 0.35)',
+    borderTopColor: getComputedStyle(targetElement).color,
+    borderRadius: '50%',
+    pointerEvents: 'none',
+    zIndex: '2147483647',
+  });
+
+  const updatePosition = () => {
+    if (!targetElement.isConnected) {
+      removeLoadingOverlay();
+      return;
+    }
+
+    const rect = targetElement.getBoundingClientRect();
+    Object.assign(overlay.style, {
+      top: `${rect.top + (rect.height - overlay.offsetHeight) / 2}px`,
+      left: `${rect.right - overlay.offsetWidth - 8}px`,
+    });
+  };
+
+  document.body.appendChild(overlay);
+  loadingOverlay = overlay;
+  loadingOverlayAnimation = overlay.animate(
+    [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+    { duration: 700, iterations: Infinity }
+  );
+  updatePosition();
+
+  window.addEventListener('scroll', updatePosition, true);
+  window.addEventListener('resize', updatePosition);
+  removeLoadingOverlayListeners = () => {
+    window.removeEventListener('scroll', updatePosition, true);
+    window.removeEventListener('resize', updatePosition);
+  };
+};
+
 export default async function main(): Promise<void> {
   // Store the last right-clicked input element's XPath
   document.addEventListener('contextmenu', async (event) => {
@@ -90,9 +154,13 @@ export default async function main(): Promise<void> {
         break;
       case MessageType.Autofill:
         {
-          const { data: text } = message.data as AutofillData;
+          const { data: text, loading } = message.data as AutofillData;
 
           (async () => {
+            if (!loading) {
+              removeLoadingOverlay();
+            }
+
             // Get the stored target element ID
             const targetId = await getBrowserStorageValue(
               `hme_target_${browser.runtime.id}`
@@ -104,6 +172,11 @@ export default async function main(): Promise<void> {
               return;
 
             targetElement.focus();
+
+            if (loading) {
+              showLoadingOverlay(targetElement);
+              return;
+            }
 
             targetElement.value = text;
             targetElement.dispatchEvent(new Event('input', { bubbles: true }));
