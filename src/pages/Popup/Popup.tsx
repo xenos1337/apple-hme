@@ -194,13 +194,17 @@ const FooterButton = (
     HTMLButtonElement
   >
 ) => {
+  const { label, icon, className, ...buttonProps } = props;
+
   return (
     <button
-      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
-      {...props}
+      className={`w-full min-h-[40px] justify-center px-2 inline-flex items-center text-sm text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-lg ${
+        className || ''
+      }`}
+      {...buttonProps}
     >
-      <FontAwesomeIcon icon={props.icon} className="mr-1" />
-      {props.label}
+      <FontAwesomeIcon icon={icon} className="mr-1" />
+      {label}
     </button>
   );
 };
@@ -220,7 +224,6 @@ const SignOutButton = (props: {
 }) => {
   return (
     <FooterButton
-      className="min-h-[40px] px-2 inline-flex items-center text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md"
       onClick={async () => {
         await props.client.signOut();
         setBrowserStorageValue('clientState', undefined);
@@ -358,47 +361,69 @@ const HmeGenerator = (props: {
     isEmailRefreshSubmitting || hmeEmail == reservedHme?.hme;
 
   const reservationFormInputClassName =
-    'appearance-none rounded-lg relative block w-full min-h-[42px] px-3 py-2 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:z-10 sm:text-sm';
+    'appearance-none rounded-xl relative block w-full min-h-[44px] px-3.5 py-2.5 border border-line-light dark:border-line-dark placeholder-muted-light dark:placeholder-zinc-600 text-text-light dark:text-text-dark bg-control-light dark:bg-control-dark focus:outline-none focus:border-primary-light dark:focus:border-zinc-500 focus:ring-2 focus:ring-primary-light/10 dark:focus:ring-white/10 focus:z-10 sm:text-sm transition-[border-color,box-shadow] duration-150';
 
   return (
-    <TitledComponent
-      title="Apple Hide My Email"
-      subtitle={`Create an address for '${tabHost}'`}
-    >
-      <div className="text-center space-y-1">
-        <div>
-          <span className="text-2xl font-semibold tracking-tight tabular-nums">
-            <button
-              className="mr-2 min-w-[40px] min-h-[40px] rounded-lg text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
-              onClick={onEmailRefreshClick}
-              aria-label="Generate another address"
-            >
-              <FontAwesomeIcon
-                className="align-text-bottom"
-                icon={faRefresh}
-                spin={isEmailRefreshSubmitting}
-              />
-            </button>
-            {hmeEmail}
+    <main className="space-y-5">
+      <div className="space-y-1 pt-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-light dark:text-muted-dark">
+          New address
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-text-light dark:text-text-dark text-balance">
+          Create an address for{' '}
+          <span className="text-primary-light dark:text-muted-dark">
+            {tabHost || 'this site'}
           </span>
-          {fwdToEmail !== undefined && (
-            <p className="mt-1 text-sm text-muted-light dark:text-muted-dark">
-              Forward to: {fwdToEmail}
-            </p>
-          )}
-        </div>
-        {hmeError && <ErrorMessage>{hmeError}</ErrorMessage>}
+        </h1>
       </div>
+
+      <section className="rounded-2xl border border-line-light dark:border-line-dark bg-surface-light dark:bg-surface-dark p-4 shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
+        <div className="flex items-start gap-3">
+          <button
+            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-light dark:text-muted-dark hover:bg-elevated-light dark:hover:bg-elevated-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20"
+            onClick={onEmailRefreshClick}
+            disabled={isEmailRefreshSubmitting}
+            aria-label="Generate another address"
+          >
+            <FontAwesomeIcon
+              icon={faRefresh}
+              spin={isEmailRefreshSubmitting}
+              className="text-lg"
+            />
+          </button>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p
+              className="break-all text-lg font-semibold leading-6 tracking-tight tabular-nums text-text-light dark:text-text-dark"
+              aria-live="polite"
+            >
+              {hmeEmail}
+            </p>
+            {fwdToEmail !== undefined && (
+              <p className="mt-1.5 truncate text-sm text-muted-light dark:text-muted-dark">
+                Forwarding to {fwdToEmail}
+              </p>
+            )}
+          </div>
+        </div>
+        {hmeError && (
+          <div className="mt-3">
+            <ErrorMessage>{hmeError}</ErrorMessage>
+          </div>
+        )}
+      </section>
       {hmeEmail && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <form
-            className={`space-y-3 ${
+            className={`space-y-4 ${
               isReservationFormDisabled ? 'opacity-70' : ''
             }`}
             onSubmit={onUseSubmit}
           >
             <div>
-              <label htmlFor="label" className="block font-medium">
+              <label
+                htmlFor="label"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-light dark:text-muted-dark"
+              >
                 Label
               </label>
               <input
@@ -412,7 +437,10 @@ const HmeGenerator = (props: {
               />
             </div>
             <div>
-              <label htmlFor="note" className="block font-medium">
+              <label
+                htmlFor="note"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-muted-light dark:text-muted-dark"
+              >
                 Note
               </label>
               <textarea
@@ -428,6 +456,7 @@ const HmeGenerator = (props: {
             <LoadingButton
               loading={isUseSubmitting}
               disabled={isReservationFormDisabled}
+              className="dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
             >
               Use
             </LoadingButton>
@@ -436,7 +465,10 @@ const HmeGenerator = (props: {
           {reservedHme && <ReservationResult hme={reservedHme} />}
         </div>
       )}
-      <div className="flex justify-evenly items-center">
+      <nav
+        className="grid grid-cols-3 gap-1 border-t border-line-light dark:border-line-dark pt-3"
+        aria-label="Popup navigation"
+      >
         <FooterButton
           onClick={() => props.callback('MANAGE')}
           icon={faList}
@@ -446,14 +478,14 @@ const HmeGenerator = (props: {
           href={browser.runtime.getURL('userguide.html')}
           target="_blank"
           rel="noreferrer"
-          className="min-h-[40px] px-2 text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-md inline-flex items-center"
+          className="w-full min-h-[40px] justify-center px-2 text-sm text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white hover:bg-elevated-light dark:hover:bg-elevated-dark focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 rounded-lg inline-flex items-center"
         >
           <FontAwesomeIcon icon={faQuestionCircle} className="mr-1" />
           Help
         </a>
         <SignOutButton callback={props.signOutCallback} client={props.client} />
-      </div>
-    </TitledComponent>
+      </nav>
+    </main>
   );
 };
 
@@ -1188,12 +1220,7 @@ const Popup = () => {
     return () => {
       isMounted = false;
     };
-  }, [
-    setState,
-    setClientState,
-    clientState,
-    isClientStateLoading,
-  ]);
+  }, [setState, setClientState, clientState, isClientStateLoading]);
 
   if (isStateLoading || isClientStateLoading) {
     return (
