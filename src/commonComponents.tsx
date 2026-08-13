@@ -12,6 +12,17 @@ import React, {
 } from 'react';
 import { useBrowserStorageState } from './hooks';
 
+export const Logo = () => {
+  return (
+    <img
+      src="icon-128.png"
+      alt=""
+      aria-hidden="true"
+      className="mx-auto mb-3 h-12 w-12"
+    />
+  );
+};
+
 export const Spinner = () => {
   return (
     <div className="text-center">
@@ -81,6 +92,7 @@ export const TitledComponent = (props: {
   return (
     <div className="text-base space-y-4">
       <div className="text-center">
+        <Logo />
         <h1 className="text-3xl font-bold tracking-tight text-balance text-text-light dark:text-text-dark">
           {props.title}
         </h1>

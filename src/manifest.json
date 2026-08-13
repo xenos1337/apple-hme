@@ -1,6 +1,9 @@
 {
-  "name": "iCloud Hide My Email",
-  "description": "Use iCloud's Hide My Email service on Chrome.",
+  "name": "Apple Hide My Email",
+  "short_name": "Apple HME",
+  "description": "Independent open-source extension for Apple's Hide My Email service. Not affiliated with Apple. Use at your own risk.",
+  "author": "Axvant UG (haftungsbeschränkt)",
+  "homepage_url": "https://axvant.com/",
   "manifest_version": 3,
   "background": { "service_worker": "background.bundle.js" },
   "action": {

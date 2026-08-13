@@ -1,17 +1,25 @@
-# iCloud Hide My Email Browser Extension
+# Apple Hide My Email
 
-[![Tests Status](https://github.com/dedoussis/icloud-hide-my-email-browser-extension/workflows/tests/badge.svg)](https://github.com/dedoussis/icloud-hide-my-email-browser-extension/actions/workflows/tests.yml)
+An independent, open-source browser extension for using Apple's Hide My
+Email service in Chromium-based browsers and Firefox.
 
-[Hide My Email](https://support.apple.com/en-us/HT210425) is a premium privacy service of iCloud. Safari offers a native integration with Hide My Email, whereby users are prompted to generate a Hide My Email address upon registration to any website. This extension aims to bring a similar UX into a wider variety of browsers. In particular, it has been explicitly tested to work on:
+Built and maintained for the public by
+[Axvant UG (haftungsbeschränkt)](https://axvant.com/). Source code and issue
+tracking are available in this repository.
 
-- [Chrome](https://chrome.google.com/webstore/detail/icloud-hide-my-email/omiaekblhgfopjkjnenhahfgcgnbohlk)
-- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/icloud-hide-my-email/)
-- [Brave](https://chrome.google.com/webstore/detail/icloud-hide-my-email/omiaekblhgfopjkjnenhahfgcgnbohlk)
-- Microsoft Edge
+## Disclaimer
 
-Note that the extension _should_ work on any browser that implements the [extension API](https://developer.chrome.com/docs/extensions/reference/) supported by Chromium-based browsers.
+Apple Hide My Email is an independent project. It is not affiliated with,
+endorsed by, sponsored by, maintained by, or otherwise connected to Apple Inc.
+Apple and iCloud are trademarks of Apple Inc.
 
-_Disclaimer: This extension is not endorsed by, directly affiliated with, maintained, authorized, or sponsored by Apple._
+The software is provided as-is, without warranty. Use it at your own risk.
+Axvant assumes no liability beyond what applicable law requires. See the
+[MIT license](LICENSE) and [Axvant imprint](https://axvant.com/imprint).
+
+This project is based on Dimitrios Dedoussis's MIT-licensed
+`icloud-hide-my-email-browser-extension`; the original copyright notice is
+preserved in [LICENSE](LICENSE).
 
 <p align="center">
 <img src="./src/assets/img/demo-popup.gif" alt="Extension popup demo" width="400" height="auto"/>
@@ -100,7 +108,7 @@ Note: the following console commands are to be executed from the root directory 
 | 3 | Develop against the local browser instance on which the `build` dir is loaded | N/A | N/A |
 | 4 | Build productionised artefact | `npm run build` | `npm run build:firefox` |
 | 5 | Compress productionised artefact | `zip build.zip ./build/*` | `web-ext -s build build` |
-| 6 | Publish | [Chrome webstore dev console](https://chrome.google.com/webstore/devconsole/) | [Mozilla Add-on developer hub](https://addons.mozilla.org/en-US/developers/addon/icloud-hide-my-email/versions/submit/) |
+| 6 | Publish | [Chrome webstore dev console](https://chrome.google.com/webstore/devconsole/) | [Mozilla Add-on developer hub](https://addons.mozilla.org/developers/) |
 <!-- prettier-ignore-end -->
 
 ### TODOs

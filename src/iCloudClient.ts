@@ -286,9 +286,7 @@ export class PremiumMailSettings {
   async reserveHme(
     hme: string,
     label: string,
-    note:
-      | string
-      | undefined = 'Generated through the iCloud Hide My Email browser extension'
+    note: string | undefined = 'Generated with Apple Hide My Email by Axvant'
   ): Promise<HmeEmail> {
     const response = (await this.client.request(
       'POST',

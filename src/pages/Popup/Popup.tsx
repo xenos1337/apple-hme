@@ -61,7 +61,7 @@ const SignInInstructions = () => {
   const userguideUrl = browser.runtime.getURL('userguide.html');
 
   return (
-    <TitledComponent title="Hide My Email" subtitle="Sign in to iCloud">
+    <TitledComponent title="Apple Hide My Email" subtitle="Sign in to iCloud">
       <div className="space-y-4">
         <div className="text-sm space-y-2">
           <p>
@@ -341,7 +341,7 @@ const HmeGenerator = (props: {
 
   return (
     <TitledComponent
-      title="Hide My Email"
+      title="Apple Hide My Email"
       subtitle={`Create an address for '${tabHost}'`}
     >
       <div className="text-center space-y-1">
@@ -758,7 +758,7 @@ const HmeManager = (props: {
 
   return (
     <TitledComponent
-      title="Hide My Email"
+      title="Apple Hide My Email"
       subtitle="Manage your HideMyEmail addresses"
     >
       {resolveMainChildComponent()}
@@ -839,25 +839,21 @@ const transitionToNextStateElement = (
 
 const Disclaimer = () => {
   return (
-    <div className="text-text-light dark:text-text-dark text-sm">
+    <div className="text-text-light dark:text-text-dark text-sm space-y-2">
       <p>
-        This extension is not endorsed by, directly affiliated with, maintained,
-        authorized, or sponsored by Apple.
+        Independent open-source software by{' '}
+        <Link href="https://axvant.com/">Axvant UG (haftungsbeschränkt)</Link>.
+        Not affiliated with, endorsed by, or sponsored by Apple Inc.
       </p>
+      <p>Provided as-is, without warranty. Use at your own risk.</p>
       <p>
-        It is developed independently by{' '}
-        <Link href="https://twitter.com/dedoussis">Dimitrios Dedoussis</Link>.
-      </p>
-      <p>
-        The source code is publicly available at{' '}
-        <Link href="https://github.com/dedoussis/icloud-hide-my-email-browser-extension">
-          GitHub
-        </Link>{' '}
-        under the MIT license.
-      </p>
-      <p>
-        The extension itself is licensed under the same license as the source
-        code.
+        <Link href="https://github.com/xenos1337/apple-hme">Source</Link>
+        {' · '}
+        <Link href="https://axvant.com/imprint">Imprint</Link>
+        {' · '}
+        <Link href="https://github.com/xenos1337/apple-hme/blob/main/LICENSE">
+          MIT license
+        </Link>
       </p>
     </div>
   );
@@ -1025,7 +1021,7 @@ const AutofillForm = () => {
 
 const Options = () => {
   return (
-    <TitledComponent title="Hide My Email" subtitle="Settings">
+    <TitledComponent title="Apple Hide My Email" subtitle="Settings">
       <div>
         <h3 className="font-bold text-lg mb-3">Disclaimer</h3>
         <Disclaimer />
