@@ -22,8 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # A release event checks out the tag that was created for the release.
-          ref: ${{ github.event.release.tag_name || github.ref }}
+          # A merged PR no longer exposes refs/pull/<number>/merge. Check out
+          # the PR head SHA so queued jobs remain runnable after the merge.
+          ref: ${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.ref }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -53,7 +54,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || github.ref }}
+          # A merged PR no longer exposes refs/pull/<number>/merge. Check out
+          # the PR head SHA so queued jobs remain runnable after the merge.
+          ref: ${{ github.event.release.tag_name || github.event.pull_request.head.sha || github.ref }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
