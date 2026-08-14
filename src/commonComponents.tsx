@@ -84,6 +84,7 @@ export const ErrorMessage = (props: { children?: React.ReactNode }) => {
 export const TitledComponent = (props: {
   title: string;
   subtitle: string;
+  hideHeader?: boolean;
   children?: React.ReactNode;
 }) => {
   const children =
@@ -91,20 +92,24 @@ export const TitledComponent = (props: {
 
   return (
     <div className="text-base space-y-4">
-      <div className="text-center">
-        <Logo />
-        <h1 className="text-3xl font-bold tracking-tight text-balance text-text-light dark:text-text-dark">
-          {props.title}
-        </h1>
-        <h2 className="mt-1 font-medium text-sm text-muted-light dark:text-muted-dark text-balance">
-          {props.subtitle}
-        </h2>
-      </div>
+      {!props.hideHeader && (
+        <div className="text-center">
+          <Logo />
+          <h1 className="text-3xl font-bold tracking-tight text-balance text-text-light dark:text-text-dark">
+            {props.title}
+          </h1>
+          <h2 className="mt-1 font-medium text-sm text-muted-light dark:text-muted-dark text-balance">
+            {props.subtitle}
+          </h2>
+        </div>
+      )}
       {children?.map((child, key) => {
         return (
           child && (
             <React.Fragment key={key}>
-              <hr className="border-line-light dark:border-line-dark" />
+              {!props.hideHeader && (
+                <hr className="border-line-light dark:border-line-dark" />
+              )}
               {child}
             </React.Fragment>
           )
@@ -125,7 +130,7 @@ export const Link = (
   const { className, children, ...restProps } = props;
   return (
     <a
-      className={`text-primary-light dark:text-muted-dark hover:text-actionHover-light dark:hover:text-white underline-offset-4 hover:underline ${className}`}
+      className={`text-primary-light dark:text-blue-400 hover:text-actionHover-light dark:hover:text-blue-300 underline-offset-4 hover:underline ${className}`}
       target="_blank"
       rel="noreferrer"
       {...restProps}
@@ -136,7 +141,7 @@ export const Link = (
 };
 
 export const ThemeSwitch = () => {
-  const [theme, setTheme] = useBrowserStorageState('theme', 'system');
+  const [theme, setTheme] = useBrowserStorageState('theme', 'dark');
 
   const updateTheme = (isDark: boolean) => {
     const elements = [
@@ -144,7 +149,10 @@ export const ThemeSwitch = () => {
       document.body,
       document.getElementById('app-container'),
     ];
-    elements.forEach((el) => el?.classList.toggle('dark', isDark));
+    elements.forEach((el) => {
+      el?.classList.toggle('dark', isDark);
+      el?.classList.toggle('light', !isDark);
+    });
   };
 
   const getSystemTheme = () =>

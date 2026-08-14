@@ -8,16 +8,16 @@
       body,
       #app-container {
         margin: 0;
+        height: 540px;
+        max-height: 540px;
         min-height: 100%;
-        background: #f4f4f5;
+        background: #09090b;
       }
 
-      @media (prefers-color-scheme: dark) {
-        html,
-        body,
-        #app-container {
-          background: #09090b;
-        }
+      html.light,
+      body.light,
+      #app-container.light {
+        background: #f4f4f5;
       }
 
       html.dark,
@@ -37,7 +37,7 @@
           const storage = await (chrome.storage || browser.storage).local.get(
             'theme'
           );
-          const theme = storage.theme || 'system';
+          const theme = storage.theme || 'dark';
           const isDark =
             theme === 'dark' ||
             (theme === 'system' &&
@@ -48,11 +48,10 @@
             document.body,
             document.getElementById('app-container'),
           ];
-          if (isDark) {
-            elements.forEach((el) => el?.classList.add('dark'));
-          } else {
-            elements.forEach((el) => el?.classList.remove('dark'));
-          }
+          elements.forEach((el) => {
+            el?.classList.toggle('dark', isDark);
+            el?.classList.toggle('light', !isDark);
+          });
         } catch (e) {
           console.error('Failed to initialize theme:', e);
         }

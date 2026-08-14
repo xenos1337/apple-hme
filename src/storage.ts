@@ -44,7 +44,7 @@ export const DEFAULT_STORE = {
       contextMenu: true,
     },
   },
-  theme: 'system',
+  theme: 'dark',
   clientState: undefined,
 };
 
