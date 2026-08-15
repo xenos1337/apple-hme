@@ -266,13 +266,16 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     return;
   }
 
+  const messageOptions = { frameId: info.frameId };
+
   // Show loading state in the right input
   await sendMessageToTab(
     MessageType.Autofill,
     {
       loading: true,
     } as AutofillData,
-    tab
+    tab,
+    messageOptions
   );
 
   const serializedUrl = info.pageUrl || tab?.url;
@@ -287,7 +290,8 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       {
         data: SIGNED_OUT_CTA_COPY,
       } as AutofillData,
-      tab
+      tab,
+      messageOptions
     );
     performDeauthSideEffects();
     return;
@@ -304,7 +308,8 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       {
         data: hme,
       } as AutofillData,
-      tab
+      tab,
+      messageOptions
     );
   } catch (e) {
     await sendMessageToTab(
@@ -312,7 +317,8 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
       {
         data: e.toString(),
       } as AutofillData,
-      tab
+      tab,
+      messageOptions
     );
   }
 });

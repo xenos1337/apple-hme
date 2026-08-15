@@ -43,6 +43,10 @@ preserved in [LICENSE](LICENSE).
 The extension can be configured to show a context menu item when right-clicking
 on input fields.
 
+Page access is granted only after an explicit extension or context-menu action.
+The autofill content script is injected on demand using the browser's
+`activeTab` permission instead of running on every website.
+
 <p align="center">
 <img src="./src/assets/img/readme-context-menu-autofilling.png" alt="Context menu item when right-clicking on input fields" width="400" height="auto"/>
 </p>

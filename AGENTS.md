@@ -55,6 +55,8 @@ Webpack produces these entry bundles:
 
 It also creates `popup.html` and `userguide.html`, copies the icons, sign-in image, rules, and manifest into `build/`, and sets the manifest version from `package.json`.
 
+The content-script bundle is not registered on every website. The popup and context-menu flows inject `contentScript.bundle.js` with the `scripting` API only after an explicit user gesture grants `activeTab` access. Keep this on-demand model when changing autofill behavior so the extension does not regain broad webpage host permissions.
+
 For Firefox, Webpack transforms the Chrome service-worker declaration into a background script declaration and adds the Gecko extension ID `apple-hide-my-email@axvant.com` with Firefox 113 as the minimum supported version.
 
 ## Local setup
