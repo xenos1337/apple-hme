@@ -1,9 +1,4 @@
-import {
-  faDesktop,
-  faMoon,
-  faSpinner,
-  faSun,
-} from '@fortawesome/free-solid-svg-icons';
+import { faDesktop, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, {
   ButtonHTMLAttributes,
@@ -23,17 +18,29 @@ export const Logo = () => {
   );
 };
 
-export const Spinner = () => {
+export const LoadingIndicator = (props: {
+  label?: string;
+  className?: string;
+}) => {
+  const label = props.label || 'Loading';
+
   return (
-    <div className="text-center">
-      <FontAwesomeIcon
-        icon={faSpinner}
-        spin={true}
-        className="text-3xl text-primary-light dark:text-muted-dark"
-      />
-    </div>
+    <span
+      className={`inline-flex items-center justify-center ${
+        props.className || ''
+      }`}
+      role="status"
+      aria-label={label}
+    >
+      <span className="popup-loader" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
+    </span>
   );
 };
+
+// Keep the old name available while all popup loading states move to the
+// shared indicator.
+export const Spinner = LoadingIndicator;
 
 export const LoadingButton = (
   props: {
@@ -60,12 +67,10 @@ export const LoadingButton = (
       type="submit"
       className={btnClassName}
       disabled={loading || disabled}
+      aria-busy={loading || undefined}
       {...btnHtmlAttrs}
     >
-      {loading && !disabled && (
-        <FontAwesomeIcon icon={faSpinner} spin={true} className="mr-1" />
-      )}
-      {props.children}
+      {loading && !disabled ? <LoadingIndicator /> : props.children}
     </button>
   );
 };
