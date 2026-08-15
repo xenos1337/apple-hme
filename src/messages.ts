@@ -47,10 +47,28 @@ export type StoreXPathData = {
   xpath: string;
 };
 
+type SendMessageToTabOptions = {
+  frameId?: number;
+};
+
+const injectContentScript = async (
+  tabId: number,
+  frameId?: number
+): Promise<void> => {
+  await browser.scripting.executeScript({
+    target: {
+      tabId,
+      ...(frameId === undefined ? {} : { frameIds: [frameId] }),
+    },
+    files: ['contentScript.bundle.js'],
+  });
+};
+
 export const sendMessageToTab = async (
   type: MessageType,
   data: unknown,
-  tab?: browser.Tabs.Tab
+  tab?: browser.Tabs.Tab,
+  options: SendMessageToTabOptions = {}
 ): Promise<void> => {
   if (tab === undefined) {
     [tab] = await browser.tabs.query({
@@ -60,9 +78,14 @@ export const sendMessageToTab = async (
   }
 
   if (tab?.id !== undefined) {
-    await browser.tabs.sendMessage(tab.id, {
-      type,
-      data,
-    });
+    await injectContentScript(tab.id, options.frameId);
+    await browser.tabs.sendMessage(
+      tab.id,
+      {
+        type,
+        data,
+      },
+      options.frameId === undefined ? {} : { frameId: options.frameId }
+    );
   }
 };

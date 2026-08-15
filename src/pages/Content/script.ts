@@ -25,10 +25,16 @@ const getElementByXPath = (xpath: string): Element | null => {
 };
 
 const LOADING_OVERLAY_ATTRIBUTE = 'data-apple-hme-loading-overlay';
+const CONTENT_SCRIPT_VERSION_KEY = '__appleHideMyEmailContentScriptVersion';
+
+type ContentScriptGlobal = typeof globalThis & {
+  [CONTENT_SCRIPT_VERSION_KEY]?: string;
+};
 
 let loadingOverlay: HTMLSpanElement | undefined;
 let loadingOverlayAnimation: Animation | undefined;
 let removeLoadingOverlayListeners: (() => void) | undefined;
+let autofillTarget: HTMLInputElement | undefined;
 
 const removeLoadingOverlay = (): void => {
   loadingOverlayAnimation?.cancel();
@@ -88,11 +94,61 @@ const showLoadingOverlay = (targetElement: HTMLInputElement): void => {
   };
 };
 
+const getAutofillTarget = async (
+  inputElementXPath?: string
+): Promise<HTMLInputElement | null> => {
+  if (inputElementXPath) {
+    const xpathTarget = getElementByXPath(inputElementXPath);
+    if (xpathTarget instanceof HTMLInputElement) {
+      autofillTarget = xpathTarget;
+      return xpathTarget;
+    }
+  }
+
+  if (autofillTarget?.isConnected) {
+    return autofillTarget;
+  }
+
+  const { activeElement } = document;
+  if (activeElement instanceof HTMLInputElement) {
+    autofillTarget = activeElement;
+  } else {
+    const storageKey = `hme_target_${browser.runtime.id}`;
+    const storedTargetId = await getBrowserStorageValue(storageKey);
+    if (typeof storedTargetId === 'string') {
+      const storedTarget = document.getElementById(storedTargetId);
+      if (storedTarget instanceof HTMLInputElement) {
+        autofillTarget = storedTarget;
+      }
+    }
+  }
+
+  if (!autofillTarget) {
+    return null;
+  }
+
+  const storageKey = `hme_target_${browser.runtime.id}`;
+  if (!autofillTarget.id) {
+    autofillTarget.id = `hme-input-${uuidv4()}`;
+  }
+  await setBrowserStorageValue(storageKey, autofillTarget.id);
+
+  return autofillTarget;
+};
+
 export default async function main(): Promise<void> {
-  // Store the last right-clicked input element's XPath
+  const contentScriptGlobal = globalThis as ContentScriptGlobal;
+  const extensionVersion = browser.runtime.getManifest().version;
+  if (contentScriptGlobal[CONTENT_SCRIPT_VERSION_KEY] === extensionVersion) {
+    return;
+  }
+  contentScriptGlobal[CONTENT_SCRIPT_VERSION_KEY] = extensionVersion;
+
+  // Keep track of the input selected through the context menu.
   document.addEventListener('contextmenu', async (event) => {
     const target = event.target as Element;
     if (target instanceof HTMLInputElement) {
+      autofillTarget = target;
       // Generate a unique ID if the element doesn't have one
       if (!target.id) {
         target.id = `hme-input-${uuidv4()}`;
@@ -154,22 +210,19 @@ export default async function main(): Promise<void> {
         break;
       case MessageType.Autofill:
         {
-          const { data: text, loading } = message.data as AutofillData;
+          const {
+            data: text,
+            loading,
+            inputElementXPath,
+          } = message.data as AutofillData;
 
           (async () => {
             if (!loading) {
               removeLoadingOverlay();
             }
 
-            // Get the stored target element ID
-            const targetId = await getBrowserStorageValue(
-              `hme_target_${browser.runtime.id}`
-            );
-            if (!targetId) return;
-
-            const targetElement = document.getElementById(targetId);
-            if (!targetElement || !(targetElement instanceof HTMLInputElement))
-              return;
+            const targetElement = await getAutofillTarget(inputElementXPath);
+            if (!targetElement) return;
 
             targetElement.focus();
 
