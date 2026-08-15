@@ -100,6 +100,14 @@ const options = {
       {
         test: /\.html$/,
         loader: 'html-loader',
+        options: {
+          sources: {
+            // Keep the hand-copied theme bootstrap as a runtime URL. Other
+            // HTML asset URLs continue to be handled by Webpack.
+            urlFilter: (attribute, value) =>
+              !(attribute === 'src' && value === 'theme-init.js'),
+          },
+        },
         exclude: /node_modules/,
       },
       { test: /\.(ts|tsx)$/, loader: 'ts-loader', exclude: /node_modules/ },
@@ -173,6 +181,11 @@ const options = {
         },
         {
           from: 'src/assets/img/icloud-sign-in.webp',
+          to: path.join(__dirname, 'build'),
+          force: true,
+        },
+        {
+          from: 'src/pages/theme-init.js',
           to: path.join(__dirname, 'build'),
           force: true,
         },
