@@ -72,8 +72,8 @@ const SignInInstructions = () => {
       subtitle="Sign in to iCloud"
       hideHeader
     >
-      <div className="space-y-4">
-        <div className="text-sm space-y-2">
+      <div className="space-y-4 p-4">
+        <div className="space-y-2 text-pretty text-sm leading-5">
           <p>
             To use this extension, sign in to your iCloud account on{' '}
             <Link
@@ -162,23 +162,36 @@ const ReservationResult = (props: { hme: HmeEmail }) => {
   };
 
   const btnClassName =
-    'min-h-[42px] focus:outline-none text-white bg-action-light hover:bg-actionHover-light dark:text-text-dark dark:bg-action-dark dark:hover:bg-actionHover-dark focus:ring-2 focus:ring-primary-light/30 dark:focus:ring-white/20 font-semibold rounded-lg text-sm px-5 py-2.5 block w-full shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]';
+    'inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-action-light px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-transform hover:bg-actionHover-light active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-primary-light/30 dark:bg-action-dark dark:text-text-dark dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] dark:hover:bg-actionHover-dark dark:focus:ring-white/20';
 
   return (
     <div
-      className="space-y-2 p-3 text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/70 rounded-xl"
+      className="space-y-3 rounded-xl bg-emerald-50 p-3 text-sm shadow-[0_0_0_1px_rgba(5,150,105,0.16),0_1px_2px_-1px_rgba(0,0,0,0.06)] dark:bg-emerald-900/20 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
       role="alert"
     >
-      <p>
-        <strong>{props.hme.hme}</strong> has successfully been reserved!
-      </p>
+      <div className="flex items-start gap-2.5">
+        <span
+          className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+          aria-hidden="true"
+        >
+          <FontAwesomeIcon icon={faCheck} className="text-xs" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold leading-5 text-emerald-900 dark:text-emerald-100">
+            Email reserved
+          </p>
+          <p className="break-all leading-5 text-emerald-700 dark:text-emerald-300">
+            {props.hme.hme}
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           className={btnClassName}
           onClick={onCopyToClipboardClick}
         >
-          <FontAwesomeIcon icon={faClipboard} className="mr-1" />
+          <FontAwesomeIcon icon={faClipboard} />
           Copy to clipboard
         </button>
         <button
@@ -186,7 +199,7 @@ const ReservationResult = (props: { hme: HmeEmail }) => {
           className={btnClassName}
           onClick={onAutofillClick}
         >
-          <FontAwesomeIcon icon={faCheck} className="mr-1" />
+          <FontAwesomeIcon icon={faCheck} />
           Autofill
         </button>
       </div>
