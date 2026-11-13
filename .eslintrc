@@ -28,6 +28,9 @@
       "parser": "@typescript-eslint/parser",
       "env": {
         "browser": true
+      },
+      "rules": {
+        "jsx-a11y/label-has-associated-control": ["error", { "depth": 3 }]
       }
     }
   ]
